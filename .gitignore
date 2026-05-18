@@ -1,1 +1,16 @@
 .DS_Store
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Local env
+.venv/
+
+# Runtime outputs (local/server run artifacts)
+index.html
+output/index.html
+output/html/
+output/meta/
+output/news/*.db
+output/rss/*.db
