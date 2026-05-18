@@ -43,52 +43,6 @@ function syncScroll(textareaId, backdropId) {
     }
 }
 
-// ==========================================
-// 12. 二维码放大弹窗逻辑
-// ==========================================
-
-const QR_MODAL_DATA = {
-    weixin: {
-        icon: '<i class="fa-brands fa-weixin text-green-600"></i>',
-        iconBg: 'bg-green-100',
-        title: '不迷路',
-        subtitle: '第一时间获取更新通知',
-        img: './assets/weixin.webp',
-        alt: '微信公众号',
-        hint: '微信扫码关注公众号'
-    },
-    donate: {
-        icon: '<i class="fa-solid fa-hand-holding-heart text-emerald-600"></i>',
-        iconBg: 'bg-emerald-100',
-        title: '随心赞赏',
-        subtitle: '金额随意，1 元也是鼓励 (´▽`ʃ♡ƪ)',
-        img: 'https://cdn-1258574687.cos.ap-shanghai.myqcloud.com/img/%2F2026%2F01%2F18ecce7c224ce0ea4c59394c29e408f8-e0d1db45.webp',
-        alt: '微信支付',
-        hint: '微信扫码 · 丰俭由人'
-    }
-};
-
-function openQrModal(type) {
-    const data = QR_MODAL_DATA[type];
-    if (!data) return;
-    const modal = document.getElementById('qr-modal');
-    document.getElementById('qr-modal-icon').className = 'w-10 h-10 rounded-xl flex items-center justify-center text-lg ' + data.iconBg;
-    document.getElementById('qr-modal-icon').innerHTML = data.icon;
-    document.getElementById('qr-modal-title').textContent = data.title;
-    document.getElementById('qr-modal-subtitle').textContent = data.subtitle;
-    document.getElementById('qr-modal-img').src = data.img;
-    document.getElementById('qr-modal-img').alt = data.alt;
-    document.getElementById('qr-modal-hint').textContent = data.hint;
-    modal.classList.remove('hidden');
-}
-
-function closeQrModal() {
-    const modal = document.getElementById('qr-modal');
-    if (modal) modal.classList.add('hidden');
-}
-
-window.openQrModal = openQrModal;
-window.closeQrModal = closeQrModal;
 const MODULE_DEFS = [
     { id: 1, name: "1. 基础设置", key: "app", editable: false },
     { id: 2, name: "2. 数据源 - 热榜平台", key: "platforms", editable: true },
@@ -110,83 +64,46 @@ const INITIAL_YAML = `# 在此粘贴你的 config.yaml...
 # 或拖拽文件到编辑器区域
 # 或点击右上角"加载官网最新配置"`;
 
-// LocalStorage 键名
-const STORAGE_KEY_CONFIG = 'trendradar_config_yaml';
-const STORAGE_KEY_FREQUENCY = 'trendradar_frequency_txt';
-const STORAGE_KEY_TIMELINE = 'trendradar_timeline_yaml';
-const STORAGE_KEY_CONFIG_TIME = 'trendradar_config_time';
-const STORAGE_KEY_FREQUENCY_TIME = 'trendradar_frequency_time';
-const STORAGE_KEY_TIMELINE_TIME = 'trendradar_timeline_time';
-
 // 官网配置文件 URL
 const REMOTE_CONFIG_URL = 'https://raw.githubusercontent.com/sansan0/TrendRadar/refs/heads/master/config/config.yaml';
 const REMOTE_FREQUENCY_URL = 'https://raw.githubusercontent.com/sansan0/TrendRadar/refs/heads/master/config/frequency_words.txt';
 const REMOTE_TIMELINE_URL = 'https://raw.githubusercontent.com/sansan0/TrendRadar/refs/heads/master/config/timeline.yaml';
-const REMOTE_VERSION_URL = 'https://raw.githubusercontent.com/sansan0/TrendRadar/refs/heads/master/version_configs';
+const PROJECT_CONFIG_URL = '../config/config.yaml';
+const PROJECT_FREQUENCY_URL = '../config/frequency_words.txt';
+const PROJECT_TIMELINE_URL = '../config/timeline.yaml';
+const PROJECT_VERSION_URL = '../version_configs';
 
 let currentYaml = "";
 let currentFrequency = "";
 let currentTimeline = "";
 let currentFrequencyData = null;  // 缓存解析后的数据，避免重复解析导致索引错位
 let currentTab = "config";
-
-// ==========================================
-// 2. 初始化与事件绑定
-// ==========================================
-// 防抖定时器
-let configSaveTimer = null;
-let frequencySaveTimer = null;
-let timelineSaveTimer = null;
+let hasAutoLoadedProjectConfig = false;
 
 document.addEventListener('DOMContentLoaded', () => {
     const yamlEditor = document.getElementById('yaml-editor');
     const frequencyEditor = document.getElementById('frequency-editor');
 
-    // 尝试从 LocalStorage 恢复配置
-    const savedConfig = localStorage.getItem(STORAGE_KEY_CONFIG);
-    const savedFrequency = localStorage.getItem(STORAGE_KEY_FREQUENCY);
-
     // 初始化编辑器
-    if (savedConfig && savedConfig.trim() && savedConfig !== INITIAL_YAML) {
-        yamlEditor.value = savedConfig;
-        currentYaml = savedConfig;
-        showToast('已恢复上次保存的配置', 'info');
-    } else {
-        yamlEditor.value = INITIAL_YAML;
-        currentYaml = INITIAL_YAML;
-    }
-
-    if (savedFrequency && savedFrequency.trim()) {
-        frequencyEditor.value = savedFrequency;
-        currentFrequency = savedFrequency;
-    } else {
-        frequencyEditor.value = "# 在此粘贴你的 frequency_words.txt 内容...\n# 或拖拽文件到编辑器区域\n\n[GLOBAL_FILTER]\n\n[WORD_GROUPS]\n";
-        currentFrequency = frequencyEditor.value;
-    }
+    yamlEditor.value = INITIAL_YAML;
+    currentYaml = INITIAL_YAML;
+    frequencyEditor.value = "# 在此粘贴你的 frequency_words.txt 内容...\n# 或拖拽文件到编辑器区域\n\n[GLOBAL_FILTER]\n\n[WORD_GROUPS]\n";
+    currentFrequency = frequencyEditor.value;
 
     // 初始化 Timeline 编辑器
     const timelineEditor = document.getElementById('timeline-editor');
-    const savedTimeline = localStorage.getItem(STORAGE_KEY_TIMELINE);
-
     const INITIAL_TIMELINE = `# 在此粘贴你的 timeline.yaml...\n# 或拖拽文件到编辑器区域\n# 或点击右上角"加载官网最新配置"`;
-
-    if (savedTimeline && savedTimeline.trim() && savedTimeline !== INITIAL_TIMELINE) {
-        timelineEditor.value = savedTimeline;
-        currentTimeline = savedTimeline;
-    } else {
-        timelineEditor.value = INITIAL_TIMELINE;
-        currentTimeline = INITIAL_TIMELINE;
-    }
+    timelineEditor.value = INITIAL_TIMELINE;
+    currentTimeline = INITIAL_TIMELINE;
 
     // 渲染右侧模块列表
     renderModules();
 
-    // 监听编辑器输入（实时同步到 UI + 防抖保存）
+    // 监听编辑器输入（实时同步到 UI）
     yamlEditor.addEventListener('input', (e) => {
         currentYaml = e.target.value;
         updateBackdrop('yaml-editor', 'yaml-backdrop');
         syncYamlToUI();
-        debounceSaveConfig();
     });
 
     frequencyEditor.addEventListener('input', (e) => {
@@ -194,14 +111,12 @@ document.addEventListener('DOMContentLoaded', () => {
         updateBackdrop('frequency-editor', 'frequency-backdrop');
         currentFrequencyData = null;
         syncFrequencyToUI();
-        debounceSaveFrequency();
     });
 
     timelineEditor.addEventListener('input', (e) => {
         currentTimeline = e.target.value;
         updateBackdrop('timeline-editor', 'timeline-backdrop');
         syncTimelineToUI();
-        debounceSaveTimeline();
     });
 
     // 同步滚动
@@ -214,49 +129,18 @@ document.addEventListener('DOMContentLoaded', () => {
     initDragAndDrop(frequencyEditor, 'frequency');
     initDragAndDrop(timelineEditor, 'timeline');
 
-    // 页面关闭/刷新时立即保存
-    window.addEventListener('beforeunload', saveAllToLocalStorage);
-
-    document.addEventListener('keydown', function(e) {
-        if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-            e.preventDefault();
-            saveAllToLocalStorage();
-            showToast('已手动保存配置', 'success');
-        }
-    });
-
     syncYamlToUI();
 
     updateBackdrop('yaml-editor', 'yaml-backdrop');
     updateBackdrop('frequency-editor', 'frequency-backdrop');
     updateBackdrop('timeline-editor', 'timeline-backdrop');
 
-    updateSaveTimeDisplay();
+    tryAutoLoadProjectConfig();
 });
 
-// 防抖保存 config.yaml
-function debounceSaveConfig() {
-    if (configSaveTimer) clearTimeout(configSaveTimer);
-    configSaveTimer = setTimeout(() => {
-        saveConfigToLocalStorage();
-    }, 1000);
-}
-
-// 防抖保存 frequency_words.txt
-function debounceSaveFrequency() {
-    if (frequencySaveTimer) clearTimeout(frequencySaveTimer);
-    frequencySaveTimer = setTimeout(() => {
-        saveFrequencyToLocalStorage();
-    }, 1000);
-}
-
-// 防抖保存 timeline.yaml
-function debounceSaveTimeline() {
-    if (timelineSaveTimer) clearTimeout(timelineSaveTimer);
-    timelineSaveTimer = setTimeout(() => {
-        saveTimelineToLocalStorage();
-    }, 1000);
-}
+function debounceSaveConfig() {}
+function debounceSaveFrequency() {}
+function debounceSaveTimeline() {}
 
 // ==========================================
 // 2.1 拖拽上传功能
@@ -342,37 +226,11 @@ function handleFileDrop(e, type) {
     reader.onload = (event) => {
         const content = event.target.result;
 
-        if (type === 'config') {
-            try {
-                jsyaml.load(content);
-                document.getElementById('yaml-editor').value = content;
-                currentYaml = content;
-                syncYamlToUI();
-                showToast(`已加载: ${file.name}`, 'success');
-            } catch (err) {
-                showToast(`YAML 语法错误: ${err.message}`, 'error');
-                // 仍然加载，让用户修复
-                document.getElementById('yaml-editor').value = content;
-                currentYaml = content;
-            }
-        } else if (type === 'timeline') {
-            try {
-                jsyaml.load(content);
-                document.getElementById('timeline-editor').value = content;
-                currentTimeline = content;
-                updateBackdrop('timeline-editor', 'timeline-backdrop');
-                syncTimelineToUI();
-                showToast(`已加载: ${file.name}`, 'success');
-            } catch (err) {
-                showToast(`YAML 语法错误: ${err.message}`, 'error');
-                document.getElementById('timeline-editor').value = content;
-                currentTimeline = content;
-            }
-        } else {
-            document.getElementById('frequency-editor').value = content;
-            currentFrequency = content;
-            syncFrequencyToUI();
+        try {
+            applyLoadedConfigContent(type, content);
             showToast(`已加载: ${file.name}`, 'success');
+        } catch (err) {
+            showToast(`加载失败: ${err.message}`, 'error');
         }
     };
 
@@ -383,121 +241,165 @@ function handleFileDrop(e, type) {
     reader.readAsText(file);
 }
 
-// ==========================================
-// 2.2 LocalStorage 保存与恢复
-// ==========================================
-
-// 通用 LocalStorage 保存函数
-function _saveToStorage(content, storageKey, timeKey, label) {
-    try {
-        if (content && content.trim().length > 10) {
-            const now = new Date().toISOString();
-            localStorage.setItem(storageKey, content);
-            localStorage.setItem(timeKey, now);
-            updateSaveTimeDisplay();
-        }
-    } catch (e) {
-        console.warn(`LocalStorage 保存 ${label} 失败:`, e);
-    }
-}
-
-function saveConfigToLocalStorage() {
-    _saveToStorage(currentYaml, STORAGE_KEY_CONFIG, STORAGE_KEY_CONFIG_TIME, 'config');
-}
-
-function saveFrequencyToLocalStorage() {
-    _saveToStorage(currentFrequency, STORAGE_KEY_FREQUENCY, STORAGE_KEY_FREQUENCY_TIME, 'frequency');
-}
-
-function saveTimelineToLocalStorage() {
-    _saveToStorage(currentTimeline, STORAGE_KEY_TIMELINE, STORAGE_KEY_TIMELINE_TIME, 'timeline');
-}
-
-// 保存全部（页面关闭时调用）
-function saveAllToLocalStorage() {
-    saveConfigToLocalStorage();
-    saveFrequencyToLocalStorage();
-    saveTimelineToLocalStorage();
-}
-
-// 兼容旧调用
-function saveToLocalStorage() {
-    saveAllToLocalStorage();
-}
-
-// 格式化时间显示
-function formatSaveTime(isoString) {
-    if (!isoString) return '未保存';
-    const date = new Date(isoString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return '刚刚';
-    if (diffMins < 60) return `${diffMins} 分钟前`;
-    if (diffHours < 24) return `${diffHours} 小时前`;
-    if (diffDays < 7) return `${diffDays} 天前`;
-
-    return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-}
-
-// 更新保存时间显示
-function updateSaveTimeDisplay() {
-    const configTime = localStorage.getItem(STORAGE_KEY_CONFIG_TIME);
-    const frequencyTime = localStorage.getItem(STORAGE_KEY_FREQUENCY_TIME);
-
-    // 更新 config.yaml 的时间显示
-    const configTimeEl = document.getElementById('config-save-time');
-    const configLabelEl = document.getElementById('config-save-label');
-    if (configTimeEl) {
-        configTimeEl.textContent = formatSaveTime(configTime);
-        configTimeEl.title = configTime ? new Date(configTime).toLocaleString('zh-CN') : '未保存';
-        if (configLabelEl) {
-            if (configTime) {
-                configLabelEl.classList.remove('hidden');
-            } else {
-                configLabelEl.classList.add('hidden');
-            }
-        }
-    }
-
-    // 更新 frequency_words.txt 的时间显示
-    const frequencyTimeEl = document.getElementById('frequency-save-time');
-    const frequencyLabelEl = document.getElementById('frequency-save-label');
-    if (frequencyTimeEl) {
-        frequencyTimeEl.textContent = formatSaveTime(frequencyTime);
-        frequencyTimeEl.title = frequencyTime ? new Date(frequencyTime).toLocaleString('zh-CN') : '未保存';
-        if (frequencyLabelEl) {
-            if (frequencyTime) {
-                frequencyLabelEl.classList.remove('hidden');
-            } else {
-                frequencyLabelEl.classList.add('hidden');
-            }
-        }
-    }
-
-    // 更新 timeline.yaml 的时间显示
-    const timelineTime = localStorage.getItem(STORAGE_KEY_TIMELINE_TIME);
-    const timelineTimeEl = document.getElementById('timeline-save-time');
-    const timelineLabelEl = document.getElementById('timeline-save-label');
-    if (timelineTimeEl) {
-        timelineTimeEl.textContent = formatSaveTime(timelineTime);
-        timelineTimeEl.title = timelineTime ? new Date(timelineTime).toLocaleString('zh-CN') : '未保存';
-        if (timelineLabelEl) {
-            if (timelineTime) {
-                timelineLabelEl.classList.remove('hidden');
-            } else {
-                timelineLabelEl.classList.add('hidden');
-            }
-        }
-    }
-}
+function saveToLocalStorage() {}
 
 // ==========================================
 // 2.3 加载官网最新配置
 // ==========================================
+function applyLoadedConfigContent(type, text) {
+    if (type === 'config') {
+        jsyaml.load(text);
+        document.getElementById('yaml-editor').value = text;
+        currentYaml = text;
+        updateBackdrop('yaml-editor', 'yaml-backdrop');
+        syncYamlToUI();
+        return;
+    }
+
+    if (type === 'timeline') {
+        jsyaml.load(text);
+        document.getElementById('timeline-editor').value = text;
+        currentTimeline = text;
+        updateBackdrop('timeline-editor', 'timeline-backdrop');
+        syncTimelineToUI();
+        return;
+    }
+
+    document.getElementById('frequency-editor').value = text;
+    currentFrequency = text;
+    currentFrequencyData = null;
+    updateBackdrop('frequency-editor', 'frequency-backdrop');
+    syncFrequencyToUI();
+}
+
+async function loadConfigFiles(fileDefs) {
+    const results = await Promise.all(fileDefs.map(async ({ type, url }) => {
+        const response = await fetch(url, { cache: 'no-store' });
+        return { type, response };
+    }));
+
+    for (const { type, response } of results) {
+        if (!response.ok) {
+            const names = { config: 'config.yaml', frequency: 'frequency_words.txt', timeline: 'timeline.yaml' };
+            throw new Error(`${names[type]} 加载失败: ${response.status}`);
+        }
+
+        const text = await response.text();
+        applyLoadedConfigContent(type, text);
+    }
+
+    saveToLocalStorage();
+}
+
+function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => resolve(event.target.result);
+        reader.onerror = () => reject(new Error(`${file.name} 读取失败`));
+        reader.readAsText(file);
+    });
+}
+
+function inferConfigTypeByName(fileName) {
+    const lowerName = fileName.toLowerCase();
+    if (lowerName === 'config.yaml' || lowerName === 'config.yml') return 'config';
+    if (lowerName === 'frequency_words.txt') return 'frequency';
+    if (lowerName === 'timeline.yaml' || lowerName === 'timeline.yml') return 'timeline';
+    return null;
+}
+
+async function importProjectConfigFromFiles(files) {
+    const matchedFiles = Array.from(files).reduce((result, file) => {
+        const type = inferConfigTypeByName(file.name);
+        if (type) result[type] = file;
+        return result;
+    }, {});
+
+    const fileDefs = Object.entries(matchedFiles);
+    if (!fileDefs.length) {
+        throw new Error('未选择 config.yaml、frequency_words.txt 或 timeline.yaml');
+    }
+
+    for (const [type, file] of fileDefs) {
+        const text = await readFileAsText(file);
+        applyLoadedConfigContent(type, text);
+    }
+
+    saveToLocalStorage();
+    return fileDefs.map(([, file]) => file.name);
+}
+
+function openProjectConfigFilePicker() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = '.yaml,.yml,.txt';
+
+    input.addEventListener('change', async () => {
+        if (!input.files || !input.files.length) return;
+
+        try {
+            const loadedFiles = await importProjectConfigFromFiles(input.files);
+            showToast(`已导入: ${loadedFiles.join(', ')}`, 'success');
+        } catch (err) {
+            console.error('导入本地配置失败:', err);
+            showToast(`导入失败: ${err.message}`, 'error');
+        }
+    }, { once: true });
+
+    input.click();
+}
+
+function isLocalProjectRuntime() {
+    const hostname = window.location.hostname;
+    return window.location.protocol !== 'file:' && (
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1' ||
+        hostname === ''
+    );
+}
+
+async function loadProjectConfigInternal(showFeedback = true) {
+    if (showFeedback) {
+        showToast('正在加载当前项目配置...', 'info');
+    }
+
+    try {
+        await loadConfigFiles([
+            { type: 'config', url: PROJECT_CONFIG_URL },
+            { type: 'frequency', url: PROJECT_FREQUENCY_URL },
+            { type: 'timeline', url: PROJECT_TIMELINE_URL }
+        ]);
+
+        if (showFeedback) {
+            showToast('已加载当前项目配置', 'success');
+        }
+
+        return true;
+    } catch (err) {
+        console.error('加载当前项目配置失败:', err);
+
+        if (showFeedback) {
+            showToast('当前路径无法直读配置文件，正在切换为本地导入模式...', 'warning');
+            setTimeout(() => openProjectConfigFilePicker(), 100);
+        }
+
+        return false;
+    }
+}
+
+function tryAutoLoadProjectConfig() {
+    if (hasAutoLoadedProjectConfig) return;
+    if (!isLocalProjectRuntime()) return;
+
+    hasAutoLoadedProjectConfig = true;
+    loadProjectConfigInternal(false);
+}
+
+window.loadProjectConfig = async function() {
+    await loadProjectConfigInternal(true);
+}
+
 window.openLoadConfigModal = function() {
     // 创建选择弹窗
     const modal = document.createElement('div');
@@ -572,53 +474,12 @@ window.confirmLoadConfig = async function() {
     showToast('正在从 GitHub 加载...', 'info');
 
     try {
-        const promises = [];
-        if (loadConfig) promises.push(fetch(REMOTE_CONFIG_URL).then(r => ({ type: 'config', res: r })));
-        if (loadFrequency) promises.push(fetch(REMOTE_FREQUENCY_URL).then(r => ({ type: 'frequency', res: r })));
-        if (loadTimeline) promises.push(fetch(REMOTE_TIMELINE_URL).then(r => ({ type: 'timeline', res: r })));
+        const fileDefs = [];
+        if (loadConfig) fileDefs.push({ type: 'config', url: REMOTE_CONFIG_URL });
+        if (loadFrequency) fileDefs.push({ type: 'frequency', url: REMOTE_FREQUENCY_URL });
+        if (loadTimeline) fileDefs.push({ type: 'timeline', url: REMOTE_TIMELINE_URL });
 
-        const results = await Promise.all(promises);
-
-        for (const { type, res } of results) {
-            if (!res.ok) {
-                const names = { config: 'config.yaml', frequency: 'frequency_words.txt', timeline: 'timeline.yaml' };
-                throw new Error(`${names[type]} 加载失败: ${res.status}`);
-            }
-
-            const text = await res.text();
-
-            if (type === 'config') {
-                try {
-                    jsyaml.load(text);
-                } catch (yamlErr) {
-                    showToast(`YAML 语法错误: ${yamlErr.message}`, 'error');
-                    continue;
-                }
-                document.getElementById('yaml-editor').value = text;
-                currentYaml = text;
-                updateBackdrop('yaml-editor', 'yaml-backdrop');
-                syncYamlToUI();
-            } else if (type === 'timeline') {
-                try {
-                    jsyaml.load(text);
-                } catch (yamlErr) {
-                    showToast(`YAML 语法错误: ${yamlErr.message}`, 'error');
-                    continue;
-                }
-                document.getElementById('timeline-editor').value = text;
-                currentTimeline = text;
-                updateBackdrop('timeline-editor', 'timeline-backdrop');
-                syncTimelineToUI();
-            } else {
-                document.getElementById('frequency-editor').value = text;
-                currentFrequency = text;
-                currentFrequencyData = null;
-                updateBackdrop('frequency-editor', 'frequency-backdrop');
-                syncFrequencyToUI();
-            }
-        }
-
-        saveToLocalStorage();
+        await loadConfigFiles(fileDefs);
 
         const loadedFiles = [];
         if (loadConfig) loadedFiles.push('config.yaml');
@@ -1242,30 +1103,21 @@ window.resetToDefault = function() {
             yamlEditor.value = INITIAL_YAML;
             currentYaml = INITIAL_YAML;
             updateBackdrop('yaml-editor', 'yaml-backdrop');
-            localStorage.removeItem(STORAGE_KEY_CONFIG);
-            localStorage.removeItem(STORAGE_KEY_CONFIG_TIME);
             renderModules();
             syncYamlToUI();
-            updateSaveTimeDisplay();
         } else if (currentTab === 'timeline') {
             const timelineEditor = document.getElementById('timeline-editor');
             const initialTimeline = `# 在此粘贴你的 timeline.yaml...\n# 或拖拽文件到编辑器区域\n# 或点击右上角"加载官网最新配置"`;
             timelineEditor.value = initialTimeline;
             currentTimeline = initialTimeline;
             updateBackdrop('timeline-editor', 'timeline-backdrop');
-            localStorage.removeItem(STORAGE_KEY_TIMELINE);
-            localStorage.removeItem(STORAGE_KEY_TIMELINE_TIME);
             syncTimelineToUI();
-            updateSaveTimeDisplay();
         } else {
             const frequencyEditor = document.getElementById('frequency-editor');
             frequencyEditor.value = "# 在此粘贴你的 frequency_words.txt 内容...\n\n[GLOBAL_FILTER]\n\n[WORD_GROUPS]\n";
             currentFrequency = frequencyEditor.value;
             updateBackdrop('frequency-editor', 'frequency-backdrop');
-            localStorage.removeItem(STORAGE_KEY_FREQUENCY);
-            localStorage.removeItem(STORAGE_KEY_FREQUENCY_TIME);
             syncFrequencyToUI();
-            updateSaveTimeDisplay();
         }
         showToast('已重置为初始状态', 'success');
     }
@@ -3245,7 +3097,7 @@ window.checkVersion = async function() {
     btn.disabled = true;
 
     try {
-        const versionRes = await fetch(REMOTE_VERSION_URL);
+        const versionRes = await fetch(PROJECT_VERSION_URL, { cache: 'no-store' });
         if (!versionRes.ok) {
             throw new Error(`版本信息获取失败: ${versionRes.status}`);
         }
@@ -3266,6 +3118,9 @@ window.checkVersion = async function() {
         if (currentTab === 'config') {
             currentVersion = extractVersion(currentYaml);
             fileName = 'config.yaml';
+        } else if (currentTab === 'timeline') {
+            currentVersion = extractVersion(currentTimeline);
+            fileName = 'timeline.yaml';
         } else {
             currentVersion = extractVersion(currentFrequency);
             fileName = 'frequency_words.txt';
@@ -4185,21 +4040,21 @@ function renderBehaviorToggles(cfg, presetName, periodKey, rawCfg = null) {
     const reportModes = ['current', 'daily', 'incremental'];
     const aiModes = ['follow_report', 'daily', 'current', 'incremental'];
 
-    html += `<div class="flex flex-wrap gap-2 mt-2 items-center">`;
+    html += `<div class="flex flex-wrap gap-3 mt-3 items-center">`;
 
     // report_mode
-    html += `<div class="flex items-center gap-1">
+    html += `<div class="flex items-center gap-2">
         <span class="text-[10px] text-gray-400">报告:</span>
-        <select class="text-[10px] border border-gray-200 rounded px-1 py-0.5 bg-white"
+        <select class="tl-form-control w-28"
                 onchange="onTlSelect('${presetName}','${periodKey}','report_mode',this.value)">
             ${reportModes.map(m => `<option value="${m}" ${cfg.report_mode === m ? 'selected' : ''}>${m}</option>`).join('')}
         </select>
     </div>`;
 
     // ai_mode
-    html += `<div class="flex items-center gap-1">
+    html += `<div class="flex items-center gap-2">
         <span class="text-[10px] text-gray-400">AI:</span>
-        <select class="text-[10px] border border-gray-200 rounded px-1 py-0.5 bg-white"
+        <select class="tl-form-control w-28"
                 onchange="onTlSelect('${presetName}','${periodKey}','ai_mode',this.value)">
             ${aiModes.map(m => `<option value="${m}" ${(cfg.ai_mode || 'follow_report') === m ? 'selected' : ''}>${m}</option>`).join('')}
         </select>
@@ -4223,12 +4078,12 @@ function renderBehaviorToggles(cfg, presetName, periodKey, rawCfg = null) {
 
     // 时间段编辑（仅非 default）
     if (periodKey !== 'default' && (cfg.start || cfg.end)) {
-        html += `<div class="flex items-center gap-2 mt-2">
+        html += `<div class="flex items-center gap-2 mt-3">
             <span class="text-[10px] text-gray-400">时间:</span>
-            <input type="time" value="${cfg.start || ''}" class="text-xs border border-gray-200 rounded px-1.5 py-0.5"
+            <input type="time" value="${cfg.start || ''}" class="tl-form-control w-28"
                    onchange="onTlSelect('${presetName}','${periodKey}','start',this.value)">
             <span class="text-gray-300">~</span>
-            <input type="time" value="${cfg.end || ''}" class="text-xs border border-gray-200 rounded px-1.5 py-0.5"
+            <input type="time" value="${cfg.end || ''}" class="tl-form-control w-28"
                    onchange="onTlSelect('${presetName}','${periodKey}','end',this.value)">
         </div>`;
     }
@@ -4245,7 +4100,7 @@ function renderBehaviorToggles(cfg, presetName, periodKey, rawCfg = null) {
         <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
             <div>
                 <label class="block text-[10px] text-gray-400 mb-1">filter_method</label>
-                <select class="text-[10px] w-full border border-gray-200 rounded px-1.5 py-1 bg-white"
+                <select class="tl-form-control w-full"
                         onchange="onTlOptionalSelect('${presetName}','${periodKey}','filter_method',this.value)">
                     <option value="" ${filterMethod === '' ? 'selected' : ''}>继承</option>
                     <option value="keyword" ${filterMethod === 'keyword' ? 'selected' : ''}>keyword</option>
@@ -4255,13 +4110,13 @@ function renderBehaviorToggles(cfg, presetName, periodKey, rawCfg = null) {
             <div>
                 <label class="block text-[10px] text-gray-400 mb-1">frequency_file</label>
                 <input type="text" value="${frequencyFile}" placeholder="如 tech.txt"
-                       class="text-[10px] w-full border border-gray-200 rounded px-1.5 py-1 bg-white"
+                       class="tl-form-control w-full"
                        onchange="onTlOptionalInput('${presetName}','${periodKey}','frequency_file',this.value)">
             </div>
             <div>
                 <label class="block text-[10px] text-gray-400 mb-1">interests_file</label>
                 <input type="text" value="${interestsFile}" placeholder="如 geopolitics.txt"
-                       class="text-[10px] w-full border border-gray-200 rounded px-1.5 py-1 bg-white"
+                       class="tl-form-control w-full"
                        onchange="onTlOptionalInput('${presetName}','${periodKey}','interests_file',this.value)">
             </div>
         </div>
@@ -5769,15 +5624,4 @@ function reorderDayPlanPeriods(presetName, planKey, orderedKeys) {
 
     clearTimeout(window._tlRenderTimer);
     window._tlRenderTimer = setTimeout(() => syncTimelineToUI(), 500);
-}
-
-// ==========================================
-// 支持侧栏 折叠/展开
-// ==========================================
-function toggleSupportSidebar() {
-    const wrap = document.querySelector('.support-sidebar-wrap');
-    const btn = document.getElementById('sidebar-toggle-btn');
-    const isCollapsed = wrap.classList.toggle('collapsed');
-    btn.classList.toggle('is-collapsed', isCollapsed);
-    btn.title = isCollapsed ? '展开侧栏' : '收起侧栏';
 }
