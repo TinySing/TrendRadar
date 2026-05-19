@@ -48,7 +48,7 @@ def render_html_content(
         渲染后的 HTML 字符串
     """
     # 默认区域顺序
-    default_region_order = ["hotlist", "rss", "new_items", "standalone", "ai_analysis"]
+    default_region_order = ["hotlist", "rss", "standalone", "ai_analysis"]
     if region_order is None:
         region_order = default_region_order
 
@@ -58,7 +58,7 @@ def render_html_content(
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>热点新闻分析</title>
+        <title>豆丁LAB 热点观察</title>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <style>
             * { box-sizing: border-box; }
@@ -1238,19 +1238,1425 @@ def render_html_content(
             body.dark-mode .badge-new {
                 background: linear-gradient(135deg, #be185d, #9333ea);
             }
+
+            /* ===== 报告阅读布局重构 ===== */
+
+            :root {
+                --report-bg: #f5f8ff;
+                --report-bg-soft: #fbfdff;
+                --report-surface: rgba(255, 255, 255, 0.58);
+                --report-surface-strong: rgba(255, 255, 255, 0.78);
+                --report-border: rgba(160, 187, 255, 0.16);
+                --report-border-strong: rgba(114, 145, 236, 0.24);
+                --report-text: #475569;
+                --report-heading: #0f172a;
+                --report-muted: #64748b;
+                --report-brand: #5b7cff;
+                --report-brand-strong: #4768ec;
+                --report-brand-soft: rgba(95, 128, 255, 0.14);
+                --report-brand-soft-strong: rgba(102, 196, 184, 0.18);
+                --report-shadow: 0 24px 72px rgba(87, 124, 197, 0.16);
+                --report-glow: radial-gradient(circle at top left, rgba(128, 169, 255, 0.26), transparent 34%);
+                --report-glow-secondary: radial-gradient(circle at top right, rgba(119, 224, 201, 0.2), transparent 28%);
+            }
+
+            body {
+                font-family: "Inter", "SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                padding: 0;
+                background:
+                    radial-gradient(circle at 0% 0%, rgba(147, 197, 253, 0.4), transparent 28%),
+                    radial-gradient(circle at 100% 4%, rgba(167, 139, 250, 0.24), transparent 26%),
+                    radial-gradient(circle at 50% 100%, rgba(110, 231, 183, 0.18), transparent 32%),
+                    linear-gradient(180deg, #f7fbff 0%, #f5f7ff 42%, #f8fffd 100%);
+                color: var(--report-text);
+                letter-spacing: -0.01em;
+            }
+
+            .container {
+                max-width: 1360px;
+                margin: 0 auto 20px;
+                border: 1px solid var(--report-border);
+                border-radius: 28px;
+                overflow: hidden;
+                background: rgba(255, 255, 255, 0.42);
+                backdrop-filter: blur(24px) saturate(160%);
+                box-shadow: var(--report-shadow);
+            }
+
+            .header {
+                padding: 38px 40px 24px;
+                text-align: left;
+                background:
+                    var(--report-glow),
+                    var(--report-glow-secondary),
+                    linear-gradient(145deg, rgba(255, 255, 255, 0.62) 0%, rgba(246, 251, 255, 0.78) 52%, rgba(245, 255, 252, 0.72) 100%);
+                color: var(--report-text);
+                border-bottom: 1px solid var(--report-border);
+            }
+
+            .header-watermark {
+                top: 28px;
+                left: auto;
+                right: 34px;
+                transform: none;
+                font-size: clamp(28px, 3vw, 42px);
+                color: rgba(99, 126, 212, 0.1);
+                letter-spacing: 0.1em;
+            }
+
+            .save-buttons {
+                top: 28px;
+                right: 28px;
+                gap: 12px;
+                align-items: center;
+            }
+
+            .header-meta-row {
+                position: relative;
+                z-index: 2;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 18px;
+                margin-bottom: 22px;
+                padding-right: 148px;
+            }
+
+            .header-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 9px 14px;
+                border-radius: 999px;
+                background: rgba(255, 255, 255, 0.56);
+                border: 1px solid rgba(114, 145, 236, 0.14);
+                color: var(--report-brand-strong);
+                font-size: 12px;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+                text-transform: uppercase;
+                box-shadow: 0 10px 30px rgba(95, 128, 255, 0.08);
+            }
+
+            .header-generated-at {
+                color: var(--report-muted);
+                font-size: 13px;
+                font-weight: 500;
+                white-space: nowrap;
+            }
+
+            .header-generated-time {
+                color: var(--report-heading);
+                font-weight: 700;
+            }
+
+            .header-copy {
+                position: relative;
+                z-index: 2;
+                max-width: 780px;
+                margin-bottom: 0;
+            }
+
+            .header-title {
+                margin: 0 0 14px 0;
+                font-size: clamp(34px, 4vw, 54px);
+                line-height: 1.04;
+                letter-spacing: -0.045em;
+                color: var(--report-heading);
+            }
+
+            .header-subtitle {
+                margin: 0;
+                color: var(--report-muted);
+                font-size: 16px;
+                line-height: 1.72;
+                max-width: 720px;
+                font-weight: 400;
+            }
+
+            .save-btn,
+            .save-dropdown-trigger,
+            .toggle-wide-btn,
+            .toggle-dark-btn,
+            .toggle-mobile-btn {
+                background: rgba(255, 255, 255, 0.6);
+                border: 1px solid rgba(114, 145, 236, 0.14);
+                color: var(--report-text);
+                backdrop-filter: blur(14px) saturate(160%);
+                box-shadow: 0 14px 28px rgba(83, 112, 196, 0.08);
+            }
+
+            .save-btn:hover,
+            .save-dropdown-trigger:hover,
+            .toggle-wide-btn:hover,
+            .toggle-dark-btn:hover,
+            .toggle-mobile-btn:hover {
+                background: rgba(255, 255, 255, 0.82);
+                border-color: rgba(114, 145, 236, 0.24);
+                color: var(--report-heading);
+                transform: translateY(-2px);
+            }
+
+            .save-btn-group {
+                display: inline-flex;
+                gap: 10px;
+                align-items: center;
+                padding: 4px;
+                border-radius: 20px;
+                background: rgba(255, 255, 255, 0.46);
+                border: 1px solid rgba(188, 208, 255, 0.22);
+                box-shadow: 0 16px 34px rgba(87, 121, 198, 0.1);
+                backdrop-filter: blur(18px) saturate(160%);
+            }
+
+            .save-icon-trigger {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 44px;
+                height: 44px;
+                padding: 0;
+                border: none;
+                border-radius: 14px;
+                background: linear-gradient(135deg, #5b7cff 0%, #6bc8c4 100%);
+                color: #ffffff;
+                cursor: pointer;
+                box-shadow: 0 16px 34px rgba(92, 122, 246, 0.26);
+                transition: all 0.2s ease;
+            }
+
+            .save-icon-trigger svg {
+                width: 18px;
+                height: 18px;
+                display: block;
+                margin: 0;
+            }
+
+            .save-icon-trigger:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 18px 38px rgba(92, 122, 246, 0.3);
+                background: linear-gradient(135deg, #6283ff 0%, #73d0cc 100%);
+            }
+
+            .save-btn {
+                padding: 12px 18px;
+                min-height: 44px;
+                border: none;
+                border-radius: 14px;
+                background: linear-gradient(135deg, #5b7cff 0%, #6bc8c4 100%);
+                color: #ffffff;
+                font-weight: 700;
+                letter-spacing: 0.01em;
+                box-shadow: 0 16px 34px rgba(92, 122, 246, 0.26);
+            }
+
+            .save-btn:hover {
+                color: #ffffff;
+                box-shadow: 0 18px 40px rgba(92, 122, 246, 0.3);
+            }
+
+            .save-dropdown-trigger {
+                min-height: 44px;
+                min-width: 44px;
+                padding: 0 14px;
+                border: none;
+                border-radius: 14px;
+                background: rgba(255, 255, 255, 0.72);
+                color: var(--report-heading);
+            }
+
+            .save-btn-group:hover .save-btn {
+                background: linear-gradient(135deg, #6283ff 0%, #73d0cc 100%);
+            }
+
+            .save-btn-group:hover .save-dropdown-trigger,
+            .save-dropdown-trigger:hover {
+                background: rgba(248, 250, 255, 0.9);
+                color: var(--report-heading);
+                box-shadow: inset 0 0 0 1px rgba(188, 208, 255, 0.18);
+            }
+
+            .save-dropdown-menu {
+                margin-top: 10px;
+                background: rgba(255, 255, 255, 0.8);
+                border: 1px solid rgba(114, 145, 236, 0.14);
+                box-shadow: 0 20px 48px rgba(78, 104, 183, 0.16);
+                opacity: 0;
+                visibility: hidden;
+                transform: translateY(-4px);
+                pointer-events: none;
+                transition: all 0.2s ease;
+            }
+
+            .save-btn-group:hover .save-dropdown-menu,
+            .save-dropdown-menu:hover {
+                opacity: 0;
+                visibility: hidden;
+                transform: translateY(-4px);
+                pointer-events: none;
+            }
+
+            .save-btn-group.open .save-dropdown-menu,
+            .save-btn-group.open .save-dropdown-menu:hover {
+                opacity: 1;
+                visibility: visible;
+                transform: translateY(0);
+                pointer-events: auto;
+            }
+
+            .save-dropdown-item {
+                color: var(--report-heading);
+            }
+
+            .save-dropdown-item:hover {
+                background: rgba(91, 124, 255, 0.08);
+            }
+
+            .content {
+                padding: 36px 40px 40px;
+                border-radius: 0 0 28px 28px;
+                background:
+                    linear-gradient(180deg, rgba(251, 253, 255, 0.88) 0%, rgba(247, 250, 255, 0.76) 50%, rgba(248, 255, 253, 0.78) 100%);
+            }
+
+            .content-nav-shell {
+                position: sticky;
+                top: 0;
+                z-index: 12;
+                margin: -8px 0 24px;
+                padding: 8px 0 12px;
+                backdrop-filter: blur(18px);
+                background: linear-gradient(180deg, rgba(247, 250, 255, 0.92), rgba(247, 250, 255, 0.72));
+            }
+
+            .content-nav {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 8px;
+                border-radius: 22px;
+                background: rgba(255, 255, 255, 0.5);
+                border: 1px solid rgba(188, 208, 255, 0.22);
+                box-shadow: 0 18px 40px rgba(87, 121, 198, 0.08);
+                overflow-x: auto;
+                scrollbar-width: none;
+            }
+
+            .content-nav::-webkit-scrollbar {
+                display: none;
+            }
+
+            .content-nav-btn {
+                flex: 0 0 auto;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 46px;
+                padding: 0 18px;
+                border: 1px solid transparent;
+                border-radius: 16px;
+                background: transparent;
+                color: var(--report-muted);
+                font-size: 14px;
+                font-weight: 700;
+                letter-spacing: -0.01em;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+
+            .content-nav-btn:hover {
+                color: var(--report-heading);
+                background: rgba(255, 255, 255, 0.52);
+            }
+
+            .content-nav-btn.active {
+                color: #ffffff;
+                border-color: rgba(91, 124, 255, 0.18);
+                background: linear-gradient(135deg, #5b7cff 0%, #6bc8c4 100%);
+                box-shadow: 0 12px 28px rgba(92, 122, 246, 0.24);
+            }
+
+            .content-shell {
+                display: block;
+            }
+
+            .content-main {
+                min-width: 0;
+            }
+
+            .content-aside {
+                display: none;
+            }
+
+            .aside-card {
+                padding: 20px;
+                border-radius: 22px;
+                background: rgba(255, 255, 255, 0.52);
+                border: 1px solid var(--report-border);
+                backdrop-filter: blur(18px);
+                box-shadow: 0 18px 34px rgba(88, 118, 198, 0.08);
+            }
+
+            .aside-title {
+                margin: 0 0 12px 0;
+                color: var(--report-heading);
+                font-size: 14px;
+                font-weight: 700;
+            }
+
+            .aside-link {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 12px 14px;
+                margin-bottom: 10px;
+                border-radius: 16px;
+                background: rgba(255, 255, 255, 0.44);
+                color: var(--report-text);
+                text-decoration: none;
+                font-size: 13px;
+                font-weight: 600;
+                border: 1px solid transparent;
+                transition: all 0.2s ease;
+            }
+
+            .aside-link:last-child {
+                margin-bottom: 0;
+            }
+
+            .aside-link:hover {
+                border-color: rgba(114, 145, 236, 0.2);
+                background: rgba(255, 255, 255, 0.66);
+                color: var(--report-brand-strong);
+            }
+
+            .aside-note {
+                color: var(--report-muted);
+                font-size: 13px;
+                line-height: 1.65;
+            }
+
+            .search-bar {
+                display: block;
+                padding: 0;
+                margin-bottom: 22px;
+            }
+
+            .search-shell {
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                padding: 16px 18px;
+                background: #ffffff;
+                border: 1px solid #e4e9f1;
+                border-radius: 18px;
+                box-shadow: 0 12px 32px rgba(15, 23, 42, 0.05);
+            }
+
+            .search-copy {
+                min-width: 116px;
+                color: #667085;
+                font-size: 12px;
+                line-height: 1.5;
+            }
+
+            .search-copy strong {
+                display: block;
+                color: #111827;
+                font-size: 14px;
+                margin-bottom: 2px;
+            }
+
+            .search-input {
+                padding: 13px 16px;
+                border-radius: 14px;
+                border: 1px solid #d9e2ec;
+                background: #f8fafc;
+                font-size: 14px;
+            }
+
+            .search-input:focus {
+                border-color: #1d4ed8;
+                box-shadow: 0 0 0 4px rgba(29, 78, 216, 0.08);
+            }
+
+            .hotlist-section,
+            .standalone-section,
+            .rss-section,
+            .new-section,
+            .ai-section,
+            .error-section {
+                background: var(--report-surface);
+                border: 1px solid var(--report-border);
+                border-radius: 24px;
+                padding: 28px;
+                backdrop-filter: blur(18px) saturate(150%);
+                box-shadow: 0 18px 44px rgba(87, 121, 198, 0.1);
+            }
+
+            .content-panel {
+                display: none;
+            }
+
+            .content-panel.active {
+                display: block;
+            }
+
+            .hotlist-section {
+                margin-top: 0;
+            }
+
+            .section-intro {
+                display: flex;
+                align-items: flex-start;
+                justify-content: flex-start;
+                gap: 0;
+                margin-bottom: 22px;
+            }
+
+            .section-kicker {
+                color: var(--report-brand);
+                font-size: 12px;
+                font-weight: 700;
+                letter-spacing: 0.12em;
+                text-transform: uppercase;
+                margin-bottom: 10px;
+            }
+
+            .section-title {
+                margin: 0;
+                color: var(--report-heading);
+                font-size: 28px;
+                line-height: 1.2;
+                letter-spacing: -0.03em;
+            }
+
+            .section-desc {
+                display: none;
+            }
+
+            .tab-bar {
+                margin-bottom: 26px;
+                display: flex;
+                align-items: center;
+                justify-content: flex-start;
+                gap: 12px;
+                padding: 6px 0 18px 0;
+                border-bottom: 1px solid rgba(188, 208, 255, 0.28);
+                top: 12px;
+                background: transparent;
+                overflow: visible;
+            }
+
+            .tab-bar-list {
+                flex: 0 1 auto;
+                min-width: auto;
+                max-width: 100%;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-wrap: nowrap;
+                overflow: hidden;
+            }
+
+            .tab-btn {
+                padding: 10px 15px;
+                border: 1px solid rgba(140, 161, 225, 0.44);
+                background: rgba(255, 255, 255, 0.46);
+                color: var(--report-text);
+                border-radius: 999px;
+                font-size: 12px;
+                font-weight: 600;
+                transition: all 0.2s ease;
+            }
+
+            .tab-btn:hover {
+                background: linear-gradient(135deg, rgba(91, 124, 255, 0.12), rgba(107, 200, 196, 0.14));
+                border-color: rgba(111, 137, 213, 0.56);
+                color: var(--report-brand-strong);
+            }
+
+            .tab-btn.active {
+                background: linear-gradient(135deg, rgba(91, 124, 255, 0.18), rgba(107, 200, 196, 0.18));
+                border-color: rgba(114, 145, 236, 0.24);
+                color: var(--report-brand-strong);
+                box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
+            }
+
+            .tab-count {
+                background: rgba(91, 124, 255, 0.1);
+                color: inherit;
+            }
+
+            .tab-overflow {
+                position: relative;
+                flex: 0 0 auto;
+                display: none;
+                align-items: center;
+            }
+
+            .tab-overflow.visible {
+                display: inline-flex;
+            }
+
+            .tab-overflow-trigger {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                min-height: 40px;
+                padding: 0 14px;
+                border: 1px solid rgba(140, 161, 225, 0.44);
+                border-radius: 999px;
+                background: rgba(255, 255, 255, 0.52);
+                color: var(--report-text);
+                font-size: 12px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+
+            .tab-overflow-trigger:hover,
+            .tab-overflow.open .tab-overflow-trigger,
+            .tab-overflow-trigger.active {
+                background: linear-gradient(135deg, rgba(91, 124, 255, 0.12), rgba(107, 200, 196, 0.14));
+                color: var(--report-brand-strong);
+                border-color: rgba(111, 137, 213, 0.56);
+            }
+
+            .tab-overflow-menu {
+                position: absolute;
+                top: calc(100% + 10px);
+                right: 0;
+                min-width: 210px;
+                padding: 8px;
+                border-radius: 18px;
+                background: rgba(255, 255, 255, 0.88);
+                border: 1px solid rgba(188, 208, 255, 0.24);
+                box-shadow: 0 18px 42px rgba(87, 121, 198, 0.16);
+                backdrop-filter: blur(18px);
+                display: none;
+                flex-direction: column;
+                gap: 6px;
+                z-index: 18;
+            }
+
+            .tab-overflow.open .tab-overflow-menu {
+                display: flex;
+            }
+
+            .tab-overflow-menu .tab-btn {
+                width: 100%;
+                justify-content: space-between;
+                padding: 12px 14px;
+                border-radius: 14px;
+            }
+
+            .tab-overflow-menu .tab-btn.active {
+                background: linear-gradient(135deg, rgba(91, 124, 255, 0.14), rgba(107, 200, 196, 0.18));
+                color: var(--report-brand-strong);
+            }
+
+            .word-group {
+                margin-bottom: 28px;
+                padding: 20px 22px;
+                border: 1px solid rgba(188, 208, 255, 0.24);
+                border-radius: 22px;
+                background: rgba(255, 255, 255, 0.48);
+            }
+
+            .word-header {
+                margin-bottom: 16px;
+                padding: 0 0 16px;
+                border-bottom: 1px solid rgba(188, 208, 255, 0.18);
+            }
+
+            .word-name {
+                font-size: 24px;
+                line-height: 1.1;
+                letter-spacing: -0.02em;
+            }
+
+            .word-count,
+            .standalone-count,
+            .feed-count {
+                display: inline-flex;
+                align-items: center;
+                min-height: 26px;
+                padding: 0 10px;
+                border-radius: 999px;
+                background: rgba(241, 245, 255, 0.88);
+                color: var(--report-text);
+                font-size: 12px;
+                font-weight: 700;
+            }
+
+            .word-count.hot {
+                background: rgba(91, 124, 255, 0.14);
+                color: var(--report-brand-strong);
+            }
+
+            .word-index {
+                color: #94a3b8;
+                font-size: 12px;
+                font-weight: 600;
+            }
+
+            .news-item {
+                margin-bottom: 0;
+                padding: 18px 0;
+                gap: 16px;
+                align-items: flex-start;
+                border-bottom-color: rgba(191, 208, 255, 0.18);
+            }
+
+            .news-item.new::after {
+                top: 16px;
+                right: 0;
+                background: rgba(91, 124, 255, 0.12);
+                color: var(--report-brand-strong);
+                border: 1px solid rgba(114, 145, 236, 0.18);
+                border-radius: 999px;
+                padding: 3px 8px;
+                letter-spacing: 0.08em;
+            }
+
+            .news-number {
+                min-width: 34px;
+                width: 36px;
+                height: 28px;
+                margin-top: 2px;
+                border-radius: 999px;
+                background: rgba(255, 255, 255, 0.64);
+                color: var(--report-muted);
+                border: 1px solid rgba(188, 208, 255, 0.18);
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .news-number .copy-icon {
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .news-number .copy-icon svg {
+                display: block;
+            }
+
+            .news-item:hover .news-number {
+                background: rgba(255, 255, 255, 0.88);
+                color: var(--report-brand-strong);
+                border-color: rgba(114, 145, 236, 0.22);
+            }
+
+            .news-content,
+            .new-item-content {
+                padding-right: 62px;
+            }
+
+            .news-item.new .news-content {
+                padding-right: 72px;
+            }
+
+            .news-header,
+            .rss-meta {
+                gap: 6px;
+                margin-bottom: 10px;
+                flex-wrap: wrap;
+            }
+
+            .source-name,
+            .rss-time,
+            .rss-author,
+            .time-info,
+            .count-info {
+                font-size: 12px;
+                line-height: 1.4;
+            }
+
+            .source-name,
+            .rss-time,
+            .time-info {
+                color: var(--report-muted);
+            }
+
+            .count-info {
+                color: #0f9e8a;
+                font-weight: 600;
+            }
+
+            .rank-num,
+            .new-item-rank {
+                min-width: 0;
+                padding: 3px 8px;
+                border-radius: 999px;
+                background: rgba(244, 247, 255, 0.96);
+                color: var(--report-text);
+                font-size: 11px;
+                font-weight: 700;
+            }
+
+            .rank-num.top,
+            .new-item-rank.top {
+                background: rgba(91, 124, 255, 0.14);
+                color: var(--report-brand-strong);
+            }
+
+            .rank-num.high,
+            .new-item-rank.high {
+                background: rgba(107, 200, 196, 0.14);
+                color: #0f9e8a;
+            }
+
+            .news-title,
+            .rss-title,
+            .new-item-title {
+                font-size: 17px;
+                line-height: 1.7;
+                color: var(--report-heading);
+            }
+
+            .news-link,
+            .rss-link {
+                color: var(--report-heading);
+                text-decoration: none;
+            }
+
+            .news-link:hover,
+            .rss-link:hover {
+                color: var(--report-brand-strong);
+                text-decoration: none;
+            }
+
+            .news-link:visited {
+                color: #5e6acc;
+            }
+
+            .section-divider {
+                margin-top: 24px;
+                padding-top: 24px;
+                border-top: none;
+            }
+
+            .standalone-section-header,
+            .rss-section-header,
+            .feed-header,
+            .standalone-header,
+            .ai-section-header {
+                margin-bottom: 18px;
+            }
+
+            .standalone-section-title,
+            .rss-section-title,
+            .ai-section-title {
+                font-size: 22px;
+                color: var(--report-heading);
+            }
+
+            .standalone-section-count,
+            .rss-section-count {
+                color: var(--report-muted);
+                font-size: 13px;
+                font-weight: 600;
+            }
+
+            .standalone-group,
+            .feed-group,
+            .new-source-group {
+                margin-bottom: 24px;
+                padding: 20px 22px;
+                border: 1px solid rgba(188, 208, 255, 0.22);
+                border-radius: 20px;
+                background: rgba(255, 255, 255, 0.48);
+            }
+
+            .standalone-groups-grid {
+                display: block;
+            }
+
+            .rss-item {
+                padding: 16px 0;
+                background: transparent;
+                border-left: none;
+                border-radius: 0;
+                border-bottom: 1px solid rgba(191, 208, 255, 0.18);
+            }
+
+            .rss-item:last-child {
+                border-bottom: none;
+                padding-bottom: 0;
+            }
+
+            .rss-summary {
+                color: var(--report-muted);
+                font-size: 13px;
+            }
+
+            .ai-section {
+                background: linear-gradient(180deg, rgba(250, 252, 255, 0.72) 0%, rgba(245, 255, 252, 0.7) 100%);
+            }
+
+            .ai-section-badge {
+                background: rgba(91, 124, 255, 0.12);
+                color: var(--report-brand-strong);
+                border: 1px solid rgba(114, 145, 236, 0.18);
+            }
+
+            .ai-block {
+                background: rgba(255, 255, 255, 0.56);
+                border: 1px solid var(--report-border);
+                box-shadow: none;
+                border-radius: 18px;
+            }
+
+            .ai-block-title {
+                color: var(--report-brand-strong);
+            }
+
+            .ai-error,
+            .error-section {
+                background: rgba(255, 247, 240, 0.78);
+                border-color: rgba(255, 178, 138, 0.32);
+                color: #b45309;
+            }
+
+            .footer {
+                display: none;
+            }
+
+            .footer-content {
+                color: var(--report-muted);
+                font-size: 13px;
+                line-height: 1.8;
+            }
+
+            .footer-link {
+                color: var(--report-brand-strong);
+            }
+
+            body.wide-mode .container {
+                max-width: 1480px;
+            }
+
+            body.wide-mode .content {
+                padding: 40px 44px 44px;
+            }
+
+            body.wide-mode .content-shell {
+                display: block;
+            }
+
+            body.wide-mode .rss-feeds-grid,
+            body.wide-mode .new-section .new-sources-grid,
+            body.wide-mode .ai-section .ai-blocks-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 20px;
+            }
+
+            body.wide-mode .standalone-section .standalone-groups-grid {
+                display: block;
+            }
+
+            body.wide-mode .standalone-group {
+                margin-bottom: 24px;
+            }
+
+            body.dark-mode {
+                background: #0f1722;
+                color: #e5e7eb;
+            }
+
+            body.dark-mode .container,
+            body.dark-mode .hotlist-section,
+            body.dark-mode .standalone-section,
+            body.dark-mode .rss-section,
+            body.dark-mode .new-section,
+            body.dark-mode .ai-section,
+            body.dark-mode .aside-card,
+            body.dark-mode .word-group,
+            body.dark-mode .standalone-group,
+            body.dark-mode .feed-group,
+            body.dark-mode .search-shell,
+            body.dark-mode .info-item,
+            body.dark-mode .ai-block {
+                background: #2a1e19;
+                border-color: #5c4336;
+                box-shadow: none;
+            }
+
+            body.dark-mode .header {
+                background:
+                    radial-gradient(circle at top right, rgba(255, 210, 170, 0.12), transparent 35%),
+                    linear-gradient(180deg, #36271f 0%, #2a1e19 100%);
+                border-bottom-color: #5c4336;
+            }
+
+            body.dark-mode .header-watermark {
+                color: rgba(255, 214, 182, 0.1);
+            }
+
+            body.dark-mode .header-badge,
+            body.dark-mode .save-btn,
+            body.dark-mode .save-dropdown-trigger,
+            body.dark-mode .toggle-wide-btn,
+            body.dark-mode .toggle-dark-btn,
+            body.dark-mode .toggle-mobile-btn {
+                background: rgba(42, 30, 25, 0.9);
+                border-color: rgba(255, 212, 179, 0.16);
+                color: #f4dcc8;
+            }
+
+            body.dark-mode .header-title,
+            body.dark-mode .section-title,
+            body.dark-mode .standalone-section-title,
+            body.dark-mode .rss-section-title,
+            body.dark-mode .ai-section-title,
+            body.dark-mode .word-name,
+            body.dark-mode .info-value,
+            body.dark-mode .aside-title {
+                color: #f8fafc;
+            }
+
+            body.dark-mode .header-subtitle,
+            body.dark-mode .header-generated-at,
+            body.dark-mode .section-desc,
+            body.dark-mode .info-label,
+            body.dark-mode .source-name,
+            body.dark-mode .time-info,
+            body.dark-mode .rss-time,
+            body.dark-mode .rss-author,
+            body.dark-mode .footer-content,
+            body.dark-mode .aside-note {
+                color: #c6ab95;
+            }
+
+            body.dark-mode .tab-bar,
+            body.dark-mode .word-header,
+            body.dark-mode .news-item,
+            body.dark-mode .rss-item,
+            body.dark-mode .footer {
+                border-color: #5c4336;
+            }
+
+            body.dark-mode .tab-btn,
+            body.dark-mode .news-number,
+            body.dark-mode .word-count,
+            body.dark-mode .standalone-count,
+            body.dark-mode .feed-count,
+            body.dark-mode .aside-link,
+            body.dark-mode .search-input,
+            body.dark-mode .rank-num,
+            body.dark-mode .new-item-rank {
+                background: #3a2a22;
+                border-color: #6a4d3f;
+                color: #f2ddcb;
+            }
+
+            body.dark-mode .tab-btn.active {
+                background: #5f402e;
+                border-color: #9b6b50;
+                color: #ffdfc3;
+            }
+
+            body.dark-mode .search-input {
+                color: #f8fafc;
+            }
+
+            body.dark-mode .news-link,
+            body.dark-mode .rss-link {
+                color: #fff1e6;
+            }
+
+            body.dark-mode .news-link:hover,
+            body.dark-mode .rss-link:hover,
+            body.dark-mode .aside-link:hover {
+                color: #ffd6b3;
+                background: #51392e;
+                border-color: #9b6b50;
+            }
+
+            body.dark-mode .count-info {
+                color: #ffc88c;
+            }
+
+            body.dark-mode .reading-progress {
+                background: linear-gradient(90deg, #e39c69, #ffd6ad);
+            }
+
+            body.mobile-preview {
+                padding: 12px;
+            }
+
+            body.mobile-preview .container {
+                max-width: 430px !important;
+                border-radius: 24px;
+            }
+
+            body.mobile-preview .header {
+                padding: 24px 18px 20px;
+            }
+
+            body.mobile-preview .header-watermark,
+            body.mobile-preview .content-aside {
+                display: none;
+            }
+
+            body.mobile-preview .header-meta-row,
+            body.mobile-preview .section-intro,
+            body.mobile-preview .search-shell {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            body.mobile-preview .header-meta-row {
+                padding-right: 0;
+                margin-bottom: 16px;
+            }
+
+            body.mobile-preview .save-buttons {
+                top: 18px;
+                right: 18px;
+                left: auto;
+                gap: 8px;
+            }
+
+            body.mobile-preview .save-btn-group {
+                max-width: 100%;
+            }
+
+            body.mobile-preview .header-title {
+                font-size: 32px;
+            }
+
+            body.mobile-preview .header-subtitle,
+            body.mobile-preview .section-desc {
+                max-width: none;
+            }
+
+            body.mobile-preview .header-info,
+            body.mobile-preview .rss-feeds-grid,
+            body.mobile-preview .new-section .new-sources-grid,
+            body.mobile-preview .standalone-section .standalone-groups-grid,
+            body.mobile-preview .ai-section .ai-blocks-grid {
+                grid-template-columns: 1fr;
+            }
+
+            body.mobile-preview .content {
+                padding: 20px 16px 24px;
+            }
+
+            body.mobile-preview .hotlist-section,
+            body.mobile-preview .standalone-section,
+            body.mobile-preview .rss-section,
+            body.mobile-preview .new-section,
+            body.mobile-preview .ai-section,
+            body.mobile-preview .error-section {
+                padding: 20px 16px;
+                border-radius: 20px;
+            }
+
+            body.mobile-preview .search-copy {
+                min-width: 0;
+            }
+
+            body.mobile-preview .tab-bar {
+                display: flex;
+                position: static;
+                top: auto;
+                margin-bottom: 18px;
+            }
+
+            body.mobile-preview .tab-bar-list {
+                gap: 8px;
+            }
+
+            body.mobile-preview .content-nav-shell {
+                margin-bottom: 18px;
+                padding-bottom: 8px;
+            }
+
+            body.mobile-preview .content-nav {
+                padding: 6px;
+                gap: 8px;
+            }
+
+            body.mobile-preview .content-nav-btn {
+                min-height: 40px;
+                padding: 0 14px;
+                font-size: 13px;
+                border-radius: 14px;
+            }
+
+            body.mobile-preview .tab-btn {
+                padding: 8px 12px;
+            }
+
+            body.mobile-preview .word-group,
+            body.mobile-preview .standalone-group,
+            body.mobile-preview .feed-group {
+                padding: 16px 14px;
+            }
+
+            body.mobile-preview .word-header,
+            body.mobile-preview .standalone-header,
+            body.mobile-preview .feed-header,
+            body.mobile-preview .rss-section-header,
+            body.mobile-preview .standalone-section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            body.mobile-preview .word-info {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            body.mobile-preview .news-item {
+                gap: 10px;
+            }
+
+            body.mobile-preview .news-content,
+            body.mobile-preview .new-item-content,
+            body.mobile-preview .news-item.new .news-content {
+                padding-right: 0;
+            }
+
+            body.mobile-preview .news-item.new::after {
+                right: 0;
+            }
+
+            body.mobile-preview .footer {
+                padding: 18px 16px 22px;
+            }
+
+            @media (max-width: 1100px) {
+                .content-aside {
+                    display: none;
+                }
+
+                .header-meta-row {
+                    padding-right: 0;
+                }
+            }
+
+            @media (max-width: 720px) {
+                body {
+                    padding: 10px;
+                }
+
+                .container {
+                    border-radius: 24px;
+                    margin: 0 auto 12px;
+                }
+
+                .header {
+                    padding: 24px 18px 22px;
+                }
+
+                .save-buttons {
+                    top: 16px;
+                    right: 16px;
+                    left: auto;
+                    gap: 6px;
+                }
+
+                .header-meta-row,
+                .section-intro,
+                .search-shell,
+                .word-header,
+                .standalone-header,
+                .feed-header,
+                .rss-section-header,
+                .standalone-section-header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+
+                .header-meta-row {
+                    padding-right: 0;
+                    margin-top: 60px;
+                }
+
+                .header-copy,
+                .section-desc {
+                    max-width: none;
+                }
+
+                .header-info {
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
+                }
+
+                .content-nav-shell,
+                .rss-feeds-grid,
+                .new-section .new-sources-grid,
+                .standalone-section .standalone-groups-grid,
+                .ai-section .ai-blocks-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .content {
+                    padding: 20px 16px 24px;
+                }
+
+                .hotlist-section,
+                .standalone-section,
+                .rss-section,
+                .new-section,
+                .ai-section,
+                .error-section {
+                    padding: 20px 16px;
+                    border-radius: 20px;
+                }
+
+                .search-copy {
+                    min-width: 0;
+                }
+
+                .tab-bar {
+                    display: flex;
+                    position: static;
+                    top: auto;
+                }
+
+                .tab-bar-list {
+                    gap: 8px;
+                }
+
+                .word-group,
+                .standalone-group,
+                .feed-group {
+                    padding: 16px 14px;
+                }
+
+                .word-info {
+                    flex-wrap: wrap;
+                    gap: 10px;
+                }
+
+                .news-item {
+                    gap: 10px;
+                }
+
+                .news-content,
+                .new-item-content,
+                .news-item.new .news-content {
+                    padding-right: 0;
+                }
+
+                .footer {
+                    padding: 20px 16px 24px;
+                }
+            }
+
+            @media (max-width: 560px) {
+                .header-watermark {
+                    display: none;
+                }
+
+                .header-meta-row {
+                    margin-top: 58px;
+                }
+
+                .header-title {
+                    font-size: 30px;
+                }
+
+                .header-subtitle {
+                    font-size: 14px;
+                }
+
+                .section-title,
+                .standalone-section-title,
+                .rss-section-title,
+                .ai-section-title {
+                    font-size: 24px;
+                }
+
+                .save-btn {
+                    min-width: 78px;
+                    padding: 10px 14px;
+                    min-height: 40px;
+                    font-size: 13px;
+                }
+
+                .save-icon-trigger {
+                    width: 40px;
+                    height: 40px;
+                    border-radius: 12px;
+                }
+
+                .save-dropdown-trigger {
+                    min-width: 40px;
+                    min-height: 40px;
+                    padding: 0 12px;
+                }
+
+                .news-number {
+                    min-width: 22px;
+                    width: 22px;
+                    height: 22px;
+                    font-size: 11px;
+                    margin-top: 2px;
+                }
+
+                .rank-num,
+                .new-item-rank,
+                .source-name,
+                .rss-time,
+                .rss-author,
+                .time-info,
+                .count-info {
+                    font-size: 10px;
+                }
+
+                .news-header,
+                .rss-meta {
+                    gap: 4px 6px;
+                    margin-bottom: 6px;
+                }
+
+                .news-title,
+                .rss-title,
+                .new-item-title {
+                    font-size: 14px;
+                    line-height: 1.58;
+                }
+
+                .word-name,
+                .standalone-name,
+                .feed-name {
+                    font-size: 20px;
+                }
+
+                .word-count,
+                .standalone-count,
+                .feed-count {
+                    min-height: 22px;
+                    padding: 0 8px;
+                    font-size: 11px;
+                }
+            }
         </style>
     </head>
     <body>
         <div class="reading-progress"></div>
         <div class="container">
             <div class="header">
-                <div class="header-watermark">TrendRadar</div>
+                <div class="header-watermark">豆丁LAB</div>
                 <div class="save-buttons">
-                    <button class="toggle-wide-btn" onclick="toggleWideMode()" title="切换宽屏/窄屏">⛶</button>
-                    <button class="toggle-dark-btn" onclick="toggleDarkMode()" title="切换暗色/亮色">☽</button>
                     <div class="save-btn-group">
-                        <button class="save-btn" onclick="saveAsImage()">导出</button>
-                        <button class="save-dropdown-trigger">▾</button>
+                        <button class="save-icon-trigger" type="button" aria-label="导出选项">
+                            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M10 3v9"></path>
+                                <path d="M6.8 8.8L10 12l3.2-3.2"></path>
+                                <path d="M4 14.5h12"></path>
+                            </svg>
+                        </button>
                         <div class="save-dropdown-menu">
                             <button class="save-dropdown-item" onclick="saveAsImage()"><svg class="dropdown-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="12" height="12" rx="2"/><circle cx="8" cy="7.5" r="2.5"/><path d="M12 4h.01"/></svg>整页截图</button>
                             <button class="save-dropdown-item" onclick="saveAsMultipleImages()"><svg class="dropdown-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="4" width="10" height="10" rx="1.5"/><path d="M5 4V2.5A1.5 1.5 0 016.5 1h7A1.5 1.5 0 0115 2.5v7a1.5 1.5 0 01-1.5 1.5H12"/></svg>分段截图</button>
@@ -1258,44 +2664,9 @@ def render_html_content(
                         </div>
                     </div>
                 </div>
-                <div class="header-title">热点新闻分析</div>
-                <div class="header-info">
-                    <div class="info-item">
-                        <span class="info-label">报告类型</span>
-                        <span class="info-value">"""
-
-    # 处理报告类型显示（根据 mode 直接显示）
-    if mode == "current":
-        html += "当前榜单"
-    elif mode == "incremental":
-        html += "增量分析"
-    else:
-        html += "全天汇总"
-
-    html += """</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">新闻总数</span>
-                        <span class="info-value">"""
-
-    html += f"{total_titles} 条"
-
-    # 计算筛选后的热点新闻数量
-    hot_news_count = sum(len(stat["titles"]) for stat in report_data["stats"])
-
-    html += """</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">热点新闻</span>
-                        <span class="info-value">"""
-
-    html += f"{hot_news_count} 条"
-
-    html += """</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">生成时间</span>
-                        <span class="info-value">"""
+                <div class="header-meta-row">
+                    <div class="header-badge">豆丁LAB Report</div>
+                    <div class="header-generated-at">最近生成时间 <span class="header-generated-time">"""
 
     # 使用提供的时间函数或默认 datetime.now
     if get_time_func:
@@ -1304,15 +2675,25 @@ def render_html_content(
         now = datetime.now()
     html += now.strftime("%m-%d %H:%M")
 
-    html += """</span>
-                    </div>
+    html += """</span></div>
+                </div>
+                <div class="header-copy">
+                    <div class="header-title">豆丁LAB 热点观察</div>
+                    <p class="header-subtitle">用更轻松的阅读节奏梳理今天值得点开的主题、持续发酵的话题和刚刚冒头的新热点，让整份报告更清楚、更耐看。</p>
                 </div>
             </div>
 
             <div class="content">
-                <div class="search-bar">
-                    <input type="text" class="search-input" placeholder="搜索新闻标题..." oninput="handleSearch(this.value)">
-                </div>"""
+                <div class="content-nav-shell">
+                    <div class="content-nav" role="tablist" aria-label="内容分区导航">
+                        <button class="content-nav-btn active" data-panel-target="hotlist-section" type="button">热点脉络</button>
+                        <button class="content-nav-btn" data-panel-target="rss-section" type="button">RSS 订阅</button>
+                        <button class="content-nav-btn" data-panel-target="standalone-section" type="button">补充观察区</button>
+                        <button class="content-nav-btn" data-panel-target="ai-section" type="button">AI 分析</button>
+                    </div>
+                </div>
+                <div class="content-shell">
+                <div class="content-main">"""
 
     # 处理失败ID错误信息
     if report_data["failed_ids"]:
@@ -1334,11 +2715,11 @@ def render_html_content(
 
         # 生成 Tab 栏 HTML
         tab_bar_html = '<div class="tab-bar">'
+        tab_bar_html += '<button class="tab-btn active" data-tab-index="all">全部</button>'
         for tab_i, tab_stat in enumerate(report_data["stats"]):
             escaped_tab_word = html_escape(tab_stat["word"])
             tab_count = tab_stat["count"]
             tab_bar_html += f'<button class="tab-btn" data-tab-index="{tab_i}">{escaped_tab_word}<span class="tab-count">{tab_count}</span></button>'
-        tab_bar_html += '<button class="tab-btn" data-tab-index="all">全部</button>'
         tab_bar_html += '</div>'
 
         for i, stat in enumerate(report_data["stats"], 1):
@@ -1450,7 +2831,13 @@ def render_html_content(
     # 给热榜统计添加外层包装
     if stats_html:
         stats_html = f"""
-                <div class="hotlist-section">{tab_bar_html}{stats_html}
+                <div class="hotlist-section content-panel active" id="hotlist-section">
+                    <div class="section-intro">
+                        <div>
+                            <div class="section-kicker">DouDing LAB</div>
+                            <h2 class="section-title">今日热点脉络</h2>
+                        </div>
+                    </div>{tab_bar_html}{stats_html}
                 </div>"""
 
     # 生成新增新闻区域的HTML
@@ -1458,7 +2845,7 @@ def render_html_content(
     if show_new_section and report_data["new_titles"]:
         new_titles_html += f"""
                 <div class="new-section">
-                    <div class="new-section-title">本次新增热点 (共 {report_data['total_new_count']} 条)</div>
+                    <div class="new-section-title">新增热点线索 (共 {report_data['total_new_count']} 条)</div>
                     <div class="new-sources-grid">"""
 
         for source_data in report_data["new_titles"]:
@@ -1552,8 +2939,14 @@ def render_html_content(
         if total_count == 0:
             return ""
 
+        if title == "RSS 订阅更新":
+            rss_section_id = ' id="rss-section"'
+        elif title == "RSS 新增更新":
+            rss_section_id = ' id="rss-new-section"'
+        else:
+            rss_section_id = ""
         rss_html = f"""
-                <div class="rss-section">
+                <div class="rss-section content-panel"{rss_section_id}>
                     <div class="rss-section-header">
                         <div class="rss-section-title">{title}</div>
                         <div class="rss-section-count">{total_count} 条</div>
@@ -1691,9 +3084,9 @@ def render_html_content(
                 all_groups.append({"name": f.get("name", f.get("id", "")), "count": len(items)})
 
         standalone_html = f"""
-                <div class="standalone-section">
+                <div class="standalone-section content-panel" id="standalone-section">
                     <div class="standalone-section-header">
-                        <div class="standalone-section-title">独立展示区</div>
+                        <div class="standalone-section-title">补充观察区</div>
                         <div class="standalone-section-count">{total_count} 条</div>
                     </div>"""
 
@@ -1701,12 +3094,12 @@ def render_html_content(
         if len(all_groups) >= 2:
             standalone_html += """
                     <div class="tab-bar standalone-tab-bar">"""
-            for idx, g in enumerate(all_groups):
-                active = ' active' if idx == 0 else ''
-                standalone_html += f"""
-                        <button class="tab-btn{active}" data-standalone-tab="{idx}">{html_escape(g["name"])}<span class="tab-count">{g["count"]}</span></button>"""
             standalone_html += f"""
-                        <button class="tab-btn" data-standalone-tab="all">全部<span class="tab-count">{total_count}</span></button>
+                        <button class="tab-btn active" data-standalone-tab="all">全部<span class="tab-count">{total_count}</span></button>"""
+            for idx, g in enumerate(all_groups):
+                standalone_html += f"""
+                        <button class="tab-btn" data-standalone-tab="{idx}">{html_escape(g["name"])}<span class="tab-count">{g["count"]}</span></button>"""
+            standalone_html += """
                     </div>"""
 
         standalone_html += """
@@ -1883,6 +3276,8 @@ def render_html_content(
 
     # 生成 AI 分析 HTML
     ai_html = render_ai_analysis_html_rich(ai_analysis) if ai_analysis else ""
+    if ai_html:
+        ai_html = ai_html.replace('<div class="ai-section">', '<div class="ai-section content-panel" id="ai-section">', 1)
 
     # 准备各区域内容映射
     region_contents = {
@@ -1928,43 +3323,24 @@ def render_html_content(
 
     html += """
             </div>
-
-            <div class="footer">
-                <div class="footer-content">
-                    由 <span class="project-name">TrendRadar</span> 生成 ·
-                    <a href="https://github.com/sansan0/TrendRadar" target="_blank" class="footer-link">
-                        GitHub 开源项目
-                    </a>"""
-
-    if update_info:
-        html += f"""
-                    <br>
-                    <span style="color: #ea580c; font-weight: 500;">
-                        发现新版本 {update_info['remote_version']}，当前版本 {update_info['current_version']}
-                    </span>"""
-
-    html += """
                 </div>
             </div>
         </div>
 
-        <div class="fab-bar">
-            <button class="fab-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="返回顶部">↑</button>
-            <button class="fab-btn fab-help">
-                <span>?</span>
-                <div class="fab-tooltip">
-                    <div class="tip-row"><span>切换宽屏</span><span class="tip-key">W</span></div>
-                    <div class="tip-row"><span>暗色模式</span><span class="tip-key">D</span></div>
-                    <div class="tip-row"><span>搜索</span><span class="tip-key">/</span></div>
-                    <div class="tip-row"><span>上一个 Tab</span><span class="tip-key">←</span></div>
-                    <div class="tip-row"><span>下一个 Tab</span><span class="tip-key">→</span></div>
-                    <div class="tip-row"><span>序号可复制</span><span class="tip-key">点击</span></div>
-                </div>
-            </button>
-        </div>
-
         <script>
             // ===== 浏览器增强功能 =====
+
+            // 当前是否使用分组导航模式
+            function isTabNavigationMode() {
+                var tabBar = document.querySelector('.hotlist-section.active .tab-bar');
+                return !!tabBar && !tabBar.classList.contains('tab-hidden');
+            }
+
+            // 更新顶部时间摘要
+            function syncHeaderTime() {
+                var headerTime = document.querySelector('.header-generated-time');
+                if (headerTime) headerTime.textContent = headerTime.textContent.trim();
+            }
 
             function toggleWideMode() {
                 document.body.classList.toggle('wide-mode');
@@ -1977,6 +3353,17 @@ def render_html_content(
                 initStandaloneTabVisibility();
             }
 
+            // 切换移动端预览
+            function toggleMobilePreview() {
+                var isMobilePreview = document.body.classList.toggle('mobile-preview');
+                try { localStorage.setItem('trendradar-mobile-preview', isMobilePreview ? '1' : '0'); } catch(e) {}
+                var btn = document.querySelector('.toggle-mobile-btn');
+                if (btn) btn.textContent = isMobilePreview ? '桌面' : '手机';
+                initTabVisibility();
+                initCollapseVisibility();
+                initStandaloneTabVisibility();
+            }
+
             function toggleDarkMode() {
                 var isDark = document.body.classList.toggle('dark-mode');
                 try { localStorage.setItem('trendradar-dark-mode', isDark ? '1' : '0'); } catch(e) {}
@@ -1984,8 +3371,191 @@ def render_html_content(
                 if (btn) btn.textContent = isDark ? '☀' : '☽';
             }
 
+            function setupOverflowTabBar(tabBar, activeAttr) {
+                if (!tabBar || tabBar.dataset.overflowReady === '1') return;
+                tabBar.dataset.overflowReady = '1';
+
+                var buttons = Array.from(tabBar.querySelectorAll('.tab-btn'));
+                if (!buttons.length) return;
+
+                var allButton = buttons.find(function(button) {
+                    return button.getAttribute(activeAttr) === 'all';
+                });
+                var orderedButtons = allButton
+                    ? [allButton].concat(buttons.filter(function(button) { return button !== allButton; }))
+                    : buttons.slice();
+
+                var list = document.createElement('div');
+                list.className = 'tab-bar-list';
+
+                var overflow = document.createElement('div');
+                overflow.className = 'tab-overflow';
+
+                var trigger = document.createElement('button');
+                trigger.className = 'tab-overflow-trigger';
+                trigger.type = 'button';
+                trigger.innerHTML = '<span>更多</span><span aria-hidden="true">▾</span>';
+
+                var menu = document.createElement('div');
+                menu.className = 'tab-overflow-menu';
+
+                overflow.appendChild(trigger);
+                overflow.appendChild(menu);
+
+                tabBar.innerHTML = '';
+                tabBar.appendChild(list);
+                tabBar.appendChild(overflow);
+
+                orderedButtons.forEach(function(button) {
+                    list.appendChild(button);
+                });
+
+                function closeMenu() {
+                    overflow.classList.remove('open');
+                }
+
+                trigger.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    overflow.classList.toggle('open');
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (!overflow.contains(e.target)) {
+                        closeMenu();
+                    }
+                });
+
+                menu.addEventListener('click', function() {
+                    closeMenu();
+                });
+            }
+
+            function syncOverflowTabBar(tabBar) {
+                if (!tabBar || tabBar.classList.contains('tab-hidden')) return;
+
+                var list = tabBar.querySelector('.tab-bar-list');
+                var overflow = tabBar.querySelector('.tab-overflow');
+                var trigger = tabBar.querySelector('.tab-overflow-trigger');
+                var menu = tabBar.querySelector('.tab-overflow-menu');
+                if (!list || !overflow || !trigger || !menu) return;
+
+                var buttons = Array.from(tabBar.querySelectorAll('.tab-btn'));
+                if (!buttons.length) return;
+
+                buttons.forEach(function(button) {
+                    list.appendChild(button);
+                });
+                overflow.classList.remove('visible', 'open');
+                trigger.classList.remove('active');
+
+                var gap = 10;
+                var reserveWidth = trigger.offsetWidth || 72;
+                var totalWidth = buttons.reduce(function(sum, button, index) {
+                    return sum + button.offsetWidth + (index > 0 ? gap : 0);
+                }, 0);
+
+                var availableWidth = tabBar.clientWidth;
+                var visibleButtons = [];
+                var overflowButtons = [];
+
+                if (totalWidth <= availableWidth) {
+                    list.innerHTML = '';
+                    buttons.forEach(function(button) {
+                        list.appendChild(button);
+                    });
+                    menu.innerHTML = '';
+                    return;
+                }
+
+                availableWidth = tabBar.clientWidth - reserveWidth - gap;
+                var usedWidth = 0;
+                buttons.forEach(function(button, index) {
+                    var buttonWidth = button.offsetWidth;
+                    var nextWidth = visibleButtons.length ? usedWidth + gap + buttonWidth : usedWidth + buttonWidth;
+                    if (index === 0 || nextWidth <= availableWidth) {
+                        visibleButtons.push(button);
+                        usedWidth = nextWidth;
+                    } else {
+                        overflowButtons.push(button);
+                    }
+                });
+
+                var activeButton = tabBar.querySelector('.tab-btn.active');
+                if (activeButton && overflowButtons.indexOf(activeButton) !== -1 && visibleButtons.length > 1) {
+                    var swapIndex = visibleButtons.length - 1;
+                    var swapButton = visibleButtons[swapIndex];
+                    if (swapButton !== activeButton) {
+                        visibleButtons.splice(swapIndex, 1, activeButton);
+                        overflowButtons = overflowButtons.filter(function(button) {
+                            return button !== activeButton;
+                        });
+                        overflowButtons.unshift(swapButton);
+                    }
+                }
+
+                list.innerHTML = '';
+                menu.innerHTML = '';
+                visibleButtons.forEach(function(button) {
+                    list.appendChild(button);
+                });
+
+                if (overflowButtons.length) {
+                    overflow.classList.add('visible');
+                    overflowButtons.forEach(function(button) {
+                        menu.appendChild(button);
+                    });
+                }
+
+                if (activeButton && menu.contains(activeButton)) {
+                    trigger.classList.add('active');
+                }
+            }
+
+            function initExportDropdown() {
+                var group = document.querySelector('.save-btn-group');
+                var trigger = document.querySelector('.save-icon-trigger');
+                if (!group || !trigger) return;
+
+                function closeMenu() {
+                    group.classList.remove('open');
+                }
+
+                trigger.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                    group.classList.toggle('open');
+                });
+
+                document.addEventListener('click', function(event) {
+                    if (!group.contains(event.target)) {
+                        closeMenu();
+                    }
+                });
+
+                group.querySelectorAll('.save-dropdown-item').forEach(function(item) {
+                    item.addEventListener('click', function() {
+                        closeMenu();
+                    });
+                });
+
+                document.addEventListener('keydown', function(event) {
+                    if (event.key === 'Escape') {
+                        closeMenu();
+                    }
+                });
+            }
+
+            function setupAllOverflowTabBars() {
+                document.querySelectorAll('.tab-bar').forEach(function(tabBar) {
+                    var activeAttr = tabBar.classList.contains('standalone-tab-bar')
+                        ? 'data-standalone-tab'
+                        : 'data-tab-index';
+                    setupOverflowTabBar(tabBar, activeAttr);
+                    syncOverflowTabBar(tabBar);
+                });
+            }
+
             function initTabs() {
-                var tabBar = document.querySelector('.tab-bar');
+                var tabBar = document.querySelector('.hotlist-section .tab-bar');
                 if (!tabBar) return;
                 var tabs = tabBar.querySelectorAll('.tab-btn');
                 var groups = document.querySelectorAll('.word-group[data-tab-index]');
@@ -1997,6 +3567,7 @@ def render_html_content(
                         var allBtn = tabBar.querySelector('[data-tab-index="all"]');
                         if (allBtn) allBtn.classList.add('active');
                         groups.forEach(function(g) { g.style.display = ''; });
+                        syncOverflowTabBar(tabBar);
                         try { history.replaceState(null, '', '#all'); } catch(e) {}
                         return;
                     }
@@ -2004,11 +3575,12 @@ def render_html_content(
                     tabs.forEach(function(t) {
                         if (parseInt(t.dataset.tabIndex) === idx) t.classList.add('active');
                     });
-                    if (document.body.classList.contains('wide-mode') && !tabBar.classList.contains('tab-hidden')) {
+                    if (isTabNavigationMode()) {
                         groups.forEach(function(g) {
                             g.style.display = (parseInt(g.dataset.tabIndex) === idx) ? '' : 'none';
                         });
                     }
+                    syncOverflowTabBar(tabBar);
                     try { history.replaceState(null, '', '#tab-' + idx); } catch(e) {}
                 }
 
@@ -2035,15 +3607,14 @@ def render_html_content(
                 var hash = window.location.hash;
                 if (hash === '#all') { activateTab('all'); }
                 else if (hash.indexOf('#tab-') === 0) { activateTab(parseInt(hash.replace('#tab-', ''))); }
-                else { activateTab(0); }
+                else { activateTab('all'); }
             }
 
             function initTabVisibility() {
-                var tabBar = document.querySelector('.tab-bar');
+                var tabBar = document.querySelector('.hotlist-section .tab-bar');
                 if (!tabBar) return;
                 var groups = document.querySelectorAll('.word-group[data-tab-index]');
-                var isWide = document.body.classList.contains('wide-mode');
-                if (!isWide || groups.length <= 2) {
+                if (groups.length <= 1) {
                     tabBar.classList.add('tab-hidden');
                     groups.forEach(function(g) { g.style.display = ''; });
                 } else {
@@ -2051,37 +3622,47 @@ def render_html_content(
                     var activeTab = tabBar.querySelector('.tab-btn.active');
                     if (activeTab) { activeTab.click(); }
                     else {
-                        var firstTab = tabBar.querySelector('.tab-btn');
-                        if (firstTab) firstTab.click();
+                        var allTab = tabBar.querySelector('[data-tab-index="all"]');
+                        if (allTab) allTab.click();
                     }
+                    syncOverflowTabBar(tabBar);
                 }
             }
 
-            function handleSearch(query) {
-                query = query.toLowerCase();
-                document.querySelectorAll('.news-item').forEach(function(item) {
-                    var title = (item.querySelector('.news-title') || {}).textContent || '';
-                    item.style.display = (!query || title.toLowerCase().indexOf(query) !== -1) ? '' : 'none';
-                });
-                document.querySelectorAll('.rss-item').forEach(function(item) {
-                    var title = (item.querySelector('.rss-title') || {}).textContent || '';
-                    item.style.display = (!query || title.toLowerCase().indexOf(query) !== -1) ? '' : 'none';
-                });
-            }
+            function initContentPanels() {
+                var navButtons = document.querySelectorAll('.content-nav-btn[data-panel-target]');
+                var panels = document.querySelectorAll('.content-panel');
+                if (!navButtons.length || !panels.length) return;
 
-            function initBackToTop() {
-                var fabBar = document.querySelector('.fab-bar');
-                if (!fabBar) return;
-                window.addEventListener('scroll', function() {
-                    fabBar.classList.toggle('visible', window.scrollY > 300);
+                function activatePanel(targetId) {
+                    navButtons.forEach(function(button) {
+                        button.classList.toggle('active', button.getAttribute('data-panel-target') === targetId);
+                    });
+                    panels.forEach(function(panel) {
+                        panel.classList.toggle('active', panel.id === targetId);
+                    });
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    initTabVisibility();
+                    initCollapseVisibility();
+                    initStandaloneTabVisibility();
+                }
+
+                navButtons.forEach(function(button) {
+                    button.addEventListener('click', function() {
+                        activatePanel(button.getAttribute('data-panel-target'));
+                    });
                 });
+
+                var defaultButton = document.querySelector('.content-nav-btn.active') || navButtons[0];
+                if (defaultButton) {
+                    activatePanel(defaultButton.getAttribute('data-panel-target'));
+                }
             }
 
             function initCollapse() {
                 document.querySelectorAll('.word-header').forEach(function(header) {
                     header.addEventListener('click', function() {
-                        var tabBar = document.querySelector('.tab-bar');
-                        if (document.body.classList.contains('wide-mode') && tabBar && !tabBar.classList.contains('tab-hidden')) return;
+                        if (isTabNavigationMode()) return;
                         var group = header.closest('.word-group');
                         if (group) group.classList.toggle('collapsed');
                     });
@@ -2091,8 +3672,7 @@ def render_html_content(
 
             function initCollapseVisibility() {
                 var headers = document.querySelectorAll('.word-header');
-                var tabBar = document.querySelector('.tab-bar');
-                var isTabMode = document.body.classList.contains('wide-mode') && tabBar && !tabBar.classList.contains('tab-hidden');
+                var isTabMode = isTabNavigationMode();
                 headers.forEach(function(h) {
                     if (isTabMode) { h.classList.remove('collapsible'); }
                     else { h.classList.add('collapsible'); }
@@ -2120,15 +3700,17 @@ def render_html_content(
                         var gVal = g.getAttribute('data-standalone-tab');
                         g.style.display = (val === 'all' || gVal === String(val)) ? '' : 'none';
                     });
+                    syncOverflowTabBar(tabBar);
                 }
 
                 btns.forEach(function(btn) {
                     btn.addEventListener('click', function() {
                         activateStandaloneTab(btn.getAttribute('data-standalone-tab'));
+                        syncOverflowTabBar(tabBar);
                     });
                 });
 
-                // 初始状态
+                activateStandaloneTab('all');
                 initStandaloneTabVisibility();
             }
 
@@ -2136,26 +3718,37 @@ def render_html_content(
                 var tabBar = document.querySelector('.standalone-tab-bar');
                 if (!tabBar) return;
                 var groups = document.querySelectorAll('.standalone-group[data-standalone-tab]');
-                var isWide = document.body.classList.contains('wide-mode');
-                if (!isWide || groups.length <= 1) {
+                if (groups.length <= 1) {
                     tabBar.classList.add('tab-hidden');
                     groups.forEach(function(g) { g.style.display = ''; });
                 } else {
                     tabBar.classList.remove('tab-hidden');
                     var activeBtn = tabBar.querySelector('.tab-btn.active');
                     if (activeBtn) activeBtn.click();
-                    else { var first = tabBar.querySelector('.tab-btn'); if (first) first.click(); }
+                    else {
+                        var allBtn = tabBar.querySelector('[data-standalone-tab="all"]');
+                        if (allBtn) allBtn.click();
+                    }
+                    syncOverflowTabBar(tabBar);
                 }
             }
 
             function prepareForScreenshot() {
                 var state = {
                     wasWide: document.body.classList.contains('wide-mode'),
+                    wasMobilePreview: document.body.classList.contains('mobile-preview'),
                     hiddenGroups: []
                 };
                 document.body.classList.remove('wide-mode');
                 state.wasDark = document.body.classList.contains('dark-mode');
                 document.body.classList.remove('dark-mode');
+                state.hiddenPanels = [];
+                document.querySelectorAll('.content-panel').forEach(function(panel) {
+                    if (!panel.classList.contains('active')) {
+                        state.hiddenPanels.push(panel.id);
+                    }
+                    panel.classList.add('active');
+                });
                 document.querySelectorAll('.word-group[data-tab-index]').forEach(function(g, i) {
                     if (g.style.display === 'none') {
                         state.hiddenGroups.push(i);
@@ -2169,7 +3762,7 @@ def render_html_content(
                         g.style.display = '';
                     }
                 });
-                document.querySelectorAll('.tab-bar, .standalone-tab-bar, .search-bar, .fab-bar, .toggle-wide-btn').forEach(function(el) {
+                document.querySelectorAll('.tab-bar, .standalone-tab-bar, .search-bar, .content-nav-shell, .toggle-wide-btn, .toggle-mobile-btn, .content-aside').forEach(function(el) {
                     el.dataset.prevDisplay = el.style.display || '';
                     el.style.display = 'none';
                 });
@@ -2183,7 +3776,11 @@ def render_html_content(
 
             function restoreAfterScreenshot(state) {
                 if (state.wasWide) document.body.classList.add('wide-mode');
+                if (state.wasMobilePreview) document.body.classList.add('mobile-preview');
                 if (state.wasDark) document.body.classList.add('dark-mode');
+                document.querySelectorAll('.content-panel').forEach(function(panel) {
+                    panel.classList.toggle('active', !state.hiddenPanels || state.hiddenPanels.indexOf(panel.id) === -1);
+                });
                 var groups = document.querySelectorAll('.word-group[data-tab-index]');
                 state.hiddenGroups.forEach(function(i) {
                     if (groups[i]) groups[i].style.display = 'none';
@@ -2194,7 +3791,7 @@ def render_html_content(
                         if (standaloneGroups[i]) standaloneGroups[i].style.display = 'none';
                     });
                 }
-                document.querySelectorAll('.tab-bar, .standalone-tab-bar, .search-bar, .fab-bar, .toggle-wide-btn').forEach(function(el) {
+                document.querySelectorAll('.tab-bar, .standalone-tab-bar, .search-bar, .content-nav-shell, .toggle-wide-btn, .toggle-mobile-btn, .content-aside').forEach(function(el) {
                     el.style.display = el.dataset.prevDisplay || '';
                     delete el.dataset.prevDisplay;
                 });
@@ -2207,8 +3804,6 @@ def render_html_content(
                 initTabVisibility();
                 initCollapseVisibility();
                 initStandaloneTabVisibility();
-                var fabBar = document.querySelector('.fab-bar');
-                if (fabBar && window.scrollY > 300) fabBar.classList.add('visible');
             }
 
             // ===== 截图功能 =====
@@ -2261,7 +3856,7 @@ def render_html_content(
 
                     const link = document.createElement('a');
                     const now = new Date();
-                    const filename = `TrendRadar_热点新闻分析_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}.png`;
+                    const filename = `豆丁LAB_热点观察_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}.png`;
 
                     link.download = filename;
                     link.href = canvas.toDataURL('image/png', 1.0);
@@ -2302,8 +3897,8 @@ def render_html_content(
                     button.disabled = true;
 
                     // 获取所有可能的分割元素
-                    const newsItems = Array.from(container.querySelectorAll('.news-item'));
                     const wordGroups = Array.from(container.querySelectorAll('.word-group'));
+                    const sectionCards = Array.from(container.querySelectorAll('.rss-section, .standalone-section, .ai-section'));
                     const newSection = container.querySelector('.new-section');
                     const errorSection = container.querySelector('.error-section');
                     const header = container.querySelector('.header');
@@ -2379,14 +3974,32 @@ def render_html_content(
                         });
                     }
 
+                    // 添加非热点区块，保证分段导出覆盖全部内容
+                    sectionCards.forEach(section => {
+                        const rect = section.getBoundingClientRect();
+                        elements.push({
+                            type: 'section-card',
+                            element: section,
+                            top: rect.top - containerRect.top,
+                            bottom: rect.bottom - containerRect.top,
+                            height: rect.height
+                        });
+                    });
+
                     // 添加footer
-                    const footerRect = footer.getBoundingClientRect();
-                    elements.push({
-                        type: 'footer',
-                        element: footer,
-                        top: footerRect.top - containerRect.top,
-                        bottom: footerRect.bottom - containerRect.top,
-                        height: footer.offsetHeight
+                    if (footer) {
+                        const footerRect = footer.getBoundingClientRect();
+                        elements.push({
+                            type: 'footer',
+                            element: footer,
+                            top: footerRect.top - containerRect.top,
+                            bottom: footerRect.bottom - containerRect.top,
+                            height: footer.offsetHeight
+                        });
+                    }
+
+                    elements.sort(function(a, b) {
+                        return a.top - b.top;
                     });
 
                     // 计算分割点
@@ -2489,7 +4102,7 @@ def render_html_content(
 
                     // 下载所有图片
                     const now = new Date();
-                    const baseFilename = `TrendRadar_热点新闻分析_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
+                    const baseFilename = `豆丁LAB_热点观察_${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}`;
 
                     for (let i = 0; i < images.length; i++) {
                         const link = document.createElement('a');
@@ -2531,19 +4144,13 @@ def render_html_content(
 
                 // 标题
                 var headerTitle = document.querySelector('.header-title');
-                lines.push('# ' + (headerTitle ? headerTitle.textContent.trim() : 'TrendRadar'));
+                lines.push('# ' + (headerTitle ? headerTitle.textContent.trim() : '豆丁LAB'));
                 lines.push('');
 
                 // 报告元信息
-                var infoItems = document.querySelectorAll('.header-info .info-item');
-                if (infoItems.length) {
-                    infoItems.forEach(function(item) {
-                        var label = item.querySelector('.info-label');
-                        var value = item.querySelector('.info-value');
-                        if (label && value) {
-                            lines.push('- **' + label.textContent.trim() + '**: ' + value.textContent.trim());
-                        }
-                    });
+                var generatedTime = document.querySelector('.header-generated-time');
+                if (generatedTime) {
+                    lines.push('- **生成时间**: ' + generatedTime.textContent.trim());
                     lines.push('');
                 }
 
@@ -2586,7 +4193,7 @@ def render_html_content(
                 // 热点关键词区
                 var wordGroups = document.querySelectorAll('.hotlist-section > .word-group');
                 if (wordGroups.length) {
-                    lines.push('## 热点新闻');
+                    lines.push('## 热点脉络');
                     lines.push('');
                     wordGroups.forEach(function(group) {
                         var wordName = group.querySelector('.word-name');
@@ -2608,7 +4215,7 @@ def render_html_content(
                 var newSection = document.querySelector('.new-section');
                 if (newSection) {
                     var newTitle = newSection.querySelector('.new-section-title');
-                    lines.push('## ' + (newTitle ? newTitle.textContent.trim() : '本次新增热点'));
+                    lines.push('## ' + (newTitle ? newTitle.textContent.trim() : '新增热点线索'));
                     lines.push('');
                     var sourceGroups = newSection.querySelectorAll('.new-source-group');
                     sourceGroups.forEach(function(sg) {
@@ -2630,7 +4237,7 @@ def render_html_content(
                 var standaloneSection = document.querySelector('.standalone-section');
                 if (standaloneSection) {
                     var standaloneTitle = standaloneSection.querySelector('.standalone-section-title');
-                    lines.push('## ' + (standaloneTitle ? standaloneTitle.textContent.trim() : '独立展示区'));
+                    lines.push('## ' + (standaloneTitle ? standaloneTitle.textContent.trim() : '补充观察区'));
                     lines.push('');
                     var groups = standaloneSection.querySelectorAll('.standalone-group');
                     groups.forEach(function(group) {
@@ -2665,13 +4272,13 @@ def render_html_content(
 
                 // 页脚
                 lines.push('---');
-                lines.push('*Generated by TrendRadar*');
+                lines.push('*Generated by 豆丁LAB*');
 
                 // 下载
-                var md = lines.join('\n');
+                var md = lines.join('\\n');
                 var blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
                 var link = document.createElement('a');
-                var filename = 'TrendRadar_' + dateStr + '_' + timeStr.replace(':', '') + '.md';
+                var filename = '豆丁LAB_' + dateStr + '_' + timeStr.replace(':', '') + '.md';
                 link.download = filename;
                 link.href = URL.createObjectURL(blob);
                 document.body.appendChild(link);
@@ -2682,53 +4289,57 @@ def render_html_content(
 
             document.addEventListener('DOMContentLoaded', function() {
                 window.scrollTo(0, 0);
+                syncHeaderTime();
 
-                // 自动检测宽屏模式
-                var savedMode = null;
-                try { savedMode = localStorage.getItem('trendradar-wide-mode'); } catch(e) {}
-                if (savedMode === '1' || (savedMode === null && window.innerWidth > 768)) {
-                    document.body.classList.add('wide-mode');
-                    var btn = document.querySelector('.toggle-wide-btn');
-                    if (btn) btn.textContent = '⊡';
+                // 按视口自动同步桌面布局，不恢复旧的手动切换状态
+                try {
+                    localStorage.removeItem('trendradar-dark-mode');
+                    localStorage.removeItem('trendradar-mobile-preview');
+                } catch(e) {}
+
+                function syncAdaptiveLayout() {
+                    if (window.innerWidth >= 1180) {
+                        document.body.classList.add('wide-mode');
+                    } else {
+                        document.body.classList.remove('wide-mode');
+                    }
+                    document.body.classList.remove('mobile-preview');
+                    document.body.classList.remove('dark-mode');
+                    initTabVisibility();
+                    initCollapseVisibility();
+                    initStandaloneTabVisibility();
+                    setupAllOverflowTabBars();
                 }
-
-                // 暗色模式恢复
-                var savedDark = null;
-                try { savedDark = localStorage.getItem('trendradar-dark-mode'); } catch(e) {}
-                if (savedDark === '1') {
-                    document.body.classList.add('dark-mode');
-                    var darkBtn = document.querySelector('.toggle-dark-btn');
-                    if (darkBtn) darkBtn.textContent = '☀';
-                }
-
-                // 启用搜索栏
-                var searchBar = document.querySelector('.search-bar');
-                if (searchBar) searchBar.style.display = 'block';
 
                 // 初始化增强功能
+                setupAllOverflowTabBars();
                 initTabs();
-                initBackToTop();
                 initCollapse();
                 initStandaloneTabs();
+                initContentPanels();
+                syncAdaptiveLayout();
+                initExportDropdown();
+                window.addEventListener('resize', syncAdaptiveLayout);
 
                 // 键盘快捷键
                 document.addEventListener('keydown', function(e) {
                     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-                    var helpBtn = document.querySelector('.fab-help');
                     switch(e.key) {
-                        case '?':
-                            if (helpBtn) {
-                                helpBtn.classList.toggle('show-tip');
-                                var fabBar = document.querySelector('.fab-bar');
-                                if (fabBar) fabBar.classList.add('visible');
+                        case 'ArrowLeft':
+                        case 'ArrowRight':
+                            var navButtons = Array.from(document.querySelectorAll('.content-nav-btn[data-panel-target]'));
+                            var activeIndex = navButtons.findIndex(function(button) {
+                                return button.classList.contains('active');
+                            });
+                            if (activeIndex === -1) return;
+                            var nextIndex = e.key === 'ArrowRight'
+                                ? Math.min(navButtons.length - 1, activeIndex + 1)
+                                : Math.max(0, activeIndex - 1);
+                            if (navButtons[nextIndex] && navButtons[nextIndex] !== navButtons[activeIndex]) {
+                                navButtons[nextIndex].click();
+                                e.preventDefault();
                             }
                             break;
-                        case 'Escape':
-                            if (helpBtn) helpBtn.classList.remove('show-tip');
-                            break;
-                        case 'w': case 'W': toggleWideMode(); break;
-                        case 'd': case 'D': toggleDarkMode(); break;
-                        case '/': e.preventDefault(); var si = document.querySelector('.search-input'); if (si) si.focus(); break;
                     }
                 });
 
@@ -2782,13 +4393,13 @@ def render_html_content(
                         var maskVal = 'radial-gradient(circle ' + radius + 'px at ' + x + 'px ' + y + 'px, rgba(0,0,0,1) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0) 100%)';
                         watermark.style.webkitMaskImage = maskVal;
                         watermark.style.maskImage = maskVal;
-                        watermark.style.color = 'rgba(255, 255, 255, 0.25)';
+                        watermark.style.color = 'rgba(196, 122, 71, 0.28)';
                     });
 
                     header.addEventListener('mouseleave', function() {
                         watermark.style.webkitMaskImage = 'radial-gradient(circle 0px at 50% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)';
                         watermark.style.maskImage = 'radial-gradient(circle 0px at 50% 50%, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%)';
-                        watermark.style.color = 'rgba(255, 255, 255, 0.15)';
+                        watermark.style.color = 'rgba(188, 128, 83, 0.12)';
                     });
                 })();
             });
