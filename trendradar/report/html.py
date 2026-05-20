@@ -656,6 +656,14 @@ def render_html_content(
                 font-size: 14px;
             }
 
+            .rss-feeds-grid {
+                display: block;
+            }
+
+            .rss-feed-column {
+                display: block;
+            }
+
             .feed-group {
                 margin-bottom: 24px;
             }
@@ -879,13 +887,14 @@ def render_html_content(
             body.wide-mode .header-info { grid-template-columns: repeat(4, 1fr); }
             body.wide-mode .content { padding: 32px 40px; }
 
-            /* 宽屏模式 - RSS feed-group 两列 */
-            body.wide-mode .rss-feeds-grid {
+            /* 宽屏模式 - RSS feed-group 平衡双列 */
+            body.wide-mode .rss-feeds-grid.rss-balanced-grid {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 24px;
+                gap: 20px;
+                align-items: start;
             }
-            body.wide-mode .feed-group { margin-bottom: 0; }
+            body.wide-mode .rss-feeds-grid.rss-balanced-grid .rss-feed-column .feed-group:last-child { margin-bottom: 0; }
 
             /* 宽屏模式 - AI 分析区两列网格 */
             body.wide-mode .ai-section .ai-blocks-grid {
@@ -2150,11 +2159,17 @@ def render_html_content(
                 display: block;
             }
 
-            body.wide-mode .rss-feeds-grid,
             body.wide-mode .new-section .new-sources-grid,
             body.wide-mode .ai-section .ai-blocks-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
                 gap: 20px;
+            }
+
+            body.wide-mode .rss-feeds-grid.rss-balanced-grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 20px;
+                align-items: start;
             }
 
             body.wide-mode .standalone-section .standalone-groups-grid {
@@ -2338,7 +2353,6 @@ def render_html_content(
             }
 
             body.mobile-preview .header-info,
-            body.mobile-preview .rss-feeds-grid,
             body.mobile-preview .new-section .new-sources-grid,
             body.mobile-preview .standalone-section .standalone-groups-grid,
             body.mobile-preview .ai-section .ai-blocks-grid {
@@ -3342,6 +3356,102 @@ def render_html_content(
                 if (headerTime) headerTime.textContent = headerTime.textContent.trim();
             }
 
+            function balanceRssFeedsGrid() {
+                var grid = document.querySelector('.rss-feeds-grid');
+                if (!grid) return;
+
+                if (!grid._rssOriginalFeedGroups) {
+                    grid._rssOriginalFeedGroups = Array.from(grid.children).filter(function(child) {
+                        return child.classList && child.classList.contains('feed-group');
+                    });
+                }
+
+                var groups = grid._rssOriginalFeedGroups || [];
+                if (!groups.length) return;
+
+                var shouldBalance = document.body.classList.contains('wide-mode')
+                    && !document.body.classList.contains('mobile-preview')
+                    && groups.length > 1;
+
+                grid.innerHTML = '';
+                grid.classList.remove('rss-balanced-grid');
+
+                if (!shouldBalance) {
+                    groups.forEach(function(group) {
+                        grid.appendChild(group);
+                    });
+                    return;
+                }
+
+                var weights = groups.map(function(group) {
+                    var itemCount = group.querySelectorAll('.rss-item').length;
+                    return itemCount > 0 ? itemCount : 1;
+                });
+                var totalWeight = weights.reduce(function(sum, weight) {
+                    return sum + weight;
+                }, 0);
+
+                var reachable = new Array(totalWeight + 1).fill(false);
+                var prevIndex = new Array(totalWeight + 1).fill(-1);
+                var prevSum = new Array(totalWeight + 1).fill(-1);
+                reachable[0] = true;
+
+                weights.forEach(function(weight, index) {
+                    for (var sum = totalWeight; sum >= weight; sum -= 1) {
+                        if (!reachable[sum] && reachable[sum - weight]) {
+                            reachable[sum] = true;
+                            prevIndex[sum] = index;
+                            prevSum[sum] = sum - weight;
+                        }
+                    }
+                });
+
+                var bestSum = 0;
+                var bestDiff = Infinity;
+                for (var candidate = 0; candidate <= totalWeight; candidate += 1) {
+                    if (!reachable[candidate]) continue;
+                    var diff = Math.abs(totalWeight - candidate * 2);
+                    if (diff < bestDiff || (diff === bestDiff && candidate > bestSum)) {
+                        bestDiff = diff;
+                        bestSum = candidate;
+                    }
+                }
+
+                var leftIndexes = new Set();
+                var cursor = bestSum;
+                while (cursor > 0 && prevIndex[cursor] !== -1) {
+                    leftIndexes.add(prevIndex[cursor]);
+                    cursor = prevSum[cursor];
+                }
+
+                if (!leftIndexes.size) {
+                    leftIndexes.add(0);
+                }
+
+                var leftColumn = document.createElement('div');
+                leftColumn.className = 'rss-feed-column';
+                var rightColumn = document.createElement('div');
+                rightColumn.className = 'rss-feed-column';
+
+                groups.forEach(function(group, index) {
+                    if (leftIndexes.has(index)) {
+                        leftColumn.appendChild(group);
+                    } else {
+                        rightColumn.appendChild(group);
+                    }
+                });
+
+                if (!rightColumn.children.length && leftColumn.children.length > 1) {
+                    rightColumn.appendChild(leftColumn.lastElementChild);
+                }
+
+                grid.classList.add('rss-balanced-grid');
+                grid.appendChild(leftColumn);
+                if (rightColumn.children.length) {
+                    grid.appendChild(rightColumn);
+                }
+            }
+
             function toggleWideMode() {
                 document.body.classList.toggle('wide-mode');
                 var isWide = document.body.classList.contains('wide-mode');
@@ -3351,6 +3461,7 @@ def render_html_content(
                 initTabVisibility();
                 initCollapseVisibility();
                 initStandaloneTabVisibility();
+                balanceRssFeedsGrid();
             }
 
             // 切换移动端预览
@@ -3362,6 +3473,7 @@ def render_html_content(
                 initTabVisibility();
                 initCollapseVisibility();
                 initStandaloneTabVisibility();
+                balanceRssFeedsGrid();
             }
 
             function toggleDarkMode() {
@@ -3804,6 +3916,7 @@ def render_html_content(
                 initTabVisibility();
                 initCollapseVisibility();
                 initStandaloneTabVisibility();
+                balanceRssFeedsGrid();
             }
 
             // ===== 截图功能 =====
@@ -4309,6 +4422,7 @@ def render_html_content(
                     initCollapseVisibility();
                     initStandaloneTabVisibility();
                     setupAllOverflowTabBars();
+                    balanceRssFeedsGrid();
                 }
 
                 // 初始化增强功能
