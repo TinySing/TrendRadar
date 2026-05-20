@@ -482,7 +482,7 @@ rss:
 # - incremental：最少打扰，只看新增
 # ===============================================================
 report:
-  mode: "incremental"                     # daily | current | incremental（schedule 开启时作为默认值）
+  mode: "current"                     # daily | current | incremental（schedule 开启时作为默认值）
 
   display_mode: "keyword"             # 分组维度: keyword | platform
                                       # keyword: 按关键词分组显示（默认）
@@ -639,10 +639,19 @@ display:
 # • 跑通后再增加多渠道和多账号，排障成本最低
 # ===============================================================
 notification:
-  enabled: true                       # 是否启用通知功能（总开关）
+  enabled: false                      # 是否启用通知功能（总开关）
                                       # ⚠️ 开启调度系统后，此项仍为总开关：
                                       #   false → 永远不推送（无论调度怎么设置）
                                       #   true  → 由调度的 push 字段控制何时推送
+
+  # 推送内容筛选（可选）
+  # 不配置时：推送沿用全局筛选结果（与报告一致）
+  # 配置后：
+  #   - 当 filter.method=keyword 时，使用 frequency_file 作为推送专用词库
+  #   - 当 filter.method=ai 时，使用 interests_file 作为推送专用兴趣文件
+  # 注意：这里只影响推送内容，不影响报告生成
+  frequency_file: ""                  # 推送专用关键词文件（位于 config/custom/keyword/）
+  interests_file: ""                  # 推送专用兴趣文件（位于 config/custom/ai/）
 
   # 推送渠道配置
   channels:
@@ -799,7 +808,7 @@ ai:
 # 模型配置见上方 ai 配置段
 # ===============================================================
 ai_analysis:
-  enabled: true                     # 是否启用 AI 分析（总开关）
+  enabled: false                    # 是否启用 AI 分析（总开关）
                                     # ⚠️ 开启调度系统后，此项仍为总开关：
                                     #   false → 永远不分析（无论调度怎么设置）
                                     #   true  → 由调度的 analyze 字段控制何时分析

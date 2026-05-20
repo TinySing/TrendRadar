@@ -22,8 +22,9 @@ import requests
 from trendradar.context import AppContext
 from trendradar import __version__
 from trendradar.core import load_config, parse_multi_account_config, validate_paired_configs
-from trendradar.core.analyzer import convert_keyword_stats_to_platform_stats
+from trendradar.core.analyzer import convert_keyword_stats_to_platform_stats, count_rss_frequency
 from trendradar.crawler import DataFetcher
+from trendradar.report import prepare_report_data
 from trendradar.storage import convert_crawl_results_to_news_data
 from trendradar.utils.time import DEFAULT_TIMEZONE, is_within_days, calculate_days_old
 from trendradar.ai import AIAnalyzer, AIAnalysisResult
@@ -793,6 +794,227 @@ class NewsAnalyzer:
 
         return standalone_data
 
+    def _get_notification_filter_override(self) -> Tuple[Optional[str], Optional[str]]:
+        """获取推送专用筛选文件配置。"""
+        cfg = self.ctx.config
+        frequency_file = (cfg.get("NOTIFICATION_FREQUENCY_FILE") or "").strip() or None
+        interests_file = (cfg.get("NOTIFICATION_INTERESTS_FILE") or "").strip() or None
+        return frequency_file, interests_file
+
+    def _build_keyword_notification_rss_stats(
+        self,
+        mode: str,
+        raw_rss_items: Optional[List[Dict]],
+        rss_new_urls: Optional[set],
+        frequency_file: str,
+    ) -> Tuple[Optional[List[Dict]], Optional[List[Dict]]]:
+        """使用推送专用关键词文件重算 RSS 推送内容。"""
+        if not raw_rss_items:
+            return None, None
+
+        try:
+            word_groups, filter_words, global_filters = self.ctx.load_frequency_words(frequency_file)
+        except Exception:
+            raise
+
+        new_items = raw_rss_items if mode == "incremental" else [
+            item for item in raw_rss_items
+            if item.get("url") and rss_new_urls and item["url"] in rss_new_urls
+        ]
+
+        rss_stats, _ = count_rss_frequency(
+            rss_items=raw_rss_items,
+            word_groups=word_groups,
+            filter_words=filter_words,
+            global_filters=global_filters,
+            new_items=new_items,
+            max_news_per_keyword=self.ctx.config.get("MAX_NEWS_PER_KEYWORD", 0),
+            sort_by_position_first=self.ctx.config.get("SORT_BY_POSITION_FIRST", False),
+            timezone=self.ctx.config.get("TIMEZONE", DEFAULT_TIMEZONE),
+            rank_threshold=self.rank_threshold,
+            quiet=True,
+        )
+
+        rss_new_stats = None
+        if mode in ["current", "daily"] and new_items:
+            rss_new_stats, _ = count_rss_frequency(
+                rss_items=new_items,
+                word_groups=word_groups,
+                filter_words=filter_words,
+                global_filters=global_filters,
+                new_items=new_items,
+                max_news_per_keyword=self.ctx.config.get("MAX_NEWS_PER_KEYWORD", 0),
+                sort_by_position_first=self.ctx.config.get("SORT_BY_POSITION_FIRST", False),
+                timezone=self.ctx.config.get("TIMEZONE", DEFAULT_TIMEZONE),
+                rank_threshold=self.rank_threshold,
+                quiet=True,
+            )
+
+        return rss_stats or None, rss_new_stats or None
+
+    def _build_ai_notification_new_titles(
+        self,
+        ai_filter_result,
+        new_titles: Optional[Dict],
+        mode: str,
+    ) -> Dict:
+        """从 AI 筛选结果中提取推送用新增热点，避免混入报告词库。"""
+        if not new_titles:
+            return {}
+
+        latest_time = None
+        if mode == "current":
+            for tag_data in ai_filter_result.tags:
+                for item in tag_data.get("items", []):
+                    if item.get("source_type", "hotlist") == "hotlist":
+                        last_time = item.get("last_time", "")
+                        if last_time and (latest_time is None or last_time > latest_time):
+                            latest_time = last_time
+
+        min_score = self.ctx.ai_filter_config.get("MIN_SCORE", 0)
+        filtered_new_titles: Dict[str, Dict] = {}
+
+        for tag_data in ai_filter_result.tags:
+            for item in tag_data.get("items", []):
+                if item.get("source_type", "hotlist") != "hotlist":
+                    continue
+
+                if mode == "current" and latest_time and item.get("last_time", "") != latest_time:
+                    continue
+
+                if min_score > 0 and item.get("relevance_score", 0) < min_score:
+                    continue
+
+                source_id = item.get("source_id", "")
+                title = item.get("title", "")
+                if not source_id or not title:
+                    continue
+
+                is_new = source_id in new_titles and title in new_titles[source_id]
+                if mode == "incremental" and not is_new:
+                    continue
+                if not is_new:
+                    continue
+
+                filtered_new_titles.setdefault(source_id, {})
+                filtered_new_titles[source_id][title] = {
+                    "url": item.get("url", ""),
+                    "mobileUrl": item.get("mobile_url", ""),
+                    "ranks": item.get("ranks", []),
+                }
+
+        return filtered_new_titles
+
+    def _prepare_notification_payload(
+        self,
+        stats: List[Dict],
+        report_data: Dict,
+        failed_ids: Optional[List],
+        new_titles: Optional[Dict],
+        id_to_name: Optional[Dict],
+        mode: str,
+        current_results: Optional[Dict],
+        title_info: Optional[Dict],
+        raw_rss_items: Optional[List[Dict]],
+        rss_items: Optional[List[Dict]],
+        rss_new_items: Optional[List[Dict]],
+        rss_new_urls: Optional[set],
+    ) -> Tuple[List[Dict], Dict, Optional[List[Dict]], Optional[List[Dict]]]:
+        """
+        根据推送专用筛选配置重算通知内容。
+
+        不配置 override 时，直接沿用报告链路的结果，保持兼容。
+        """
+        notification_frequency_file, notification_interests_file = self._get_notification_filter_override()
+
+        if self.filter_method == "keyword":
+            if not notification_frequency_file or not current_results or not id_to_name:
+                return stats, report_data, rss_items, rss_new_items
+
+            print(f"[推送] 使用推送专用关键词文件: {notification_frequency_file}")
+            try:
+                word_groups, filter_words, global_filters = self.ctx.load_frequency_words(notification_frequency_file)
+                push_stats, _ = self.ctx.count_frequency(
+                    current_results,
+                    word_groups,
+                    filter_words,
+                    id_to_name,
+                    title_info,
+                    new_titles,
+                    mode=mode,
+                    global_filters=global_filters,
+                    quiet=True,
+                )
+
+                if self.ctx.display_mode == "platform" and push_stats:
+                    push_stats = convert_keyword_stats_to_platform_stats(
+                        push_stats,
+                        self.ctx.weight_config,
+                        self.ctx.rank_threshold,
+                    )
+
+                push_rss_items, push_rss_new_items = self._build_keyword_notification_rss_stats(
+                    mode,
+                    raw_rss_items,
+                    rss_new_urls,
+                    notification_frequency_file,
+                )
+
+                push_report_data = self.ctx.prepare_report(
+                    push_stats,
+                    failed_ids,
+                    new_titles,
+                    id_to_name,
+                    mode,
+                    frequency_file=notification_frequency_file,
+                )
+                return push_stats, push_report_data, push_rss_items, push_rss_new_items
+            except Exception as e:
+                print(f"[推送] 推送专用关键词文件处理失败: {e}，回退到主筛选结果")
+                return stats, report_data, rss_items, rss_new_items
+
+        if self.filter_method == "ai":
+            if not notification_interests_file or not id_to_name:
+                return stats, report_data, rss_items, rss_new_items
+
+            print(f"[推送] 使用推送专用兴趣文件: {notification_interests_file}")
+            try:
+                ai_filter_result = self.ctx.run_ai_filter(interests_file=notification_interests_file)
+                if not ai_filter_result or not ai_filter_result.success:
+                    error_msg = ai_filter_result.error if ai_filter_result else "未知错误"
+                    print(f"[推送] 推送专用 AI 筛选失败: {error_msg}，回退到主筛选结果")
+                    return stats, report_data, rss_items, rss_new_items
+
+                push_stats, push_rss_items = self.ctx.convert_ai_filter_to_report_data(
+                    ai_filter_result,
+                    mode=mode,
+                    new_titles=new_titles,
+                    rss_new_urls=rss_new_urls,
+                )
+
+                if self.ctx.display_mode == "platform" and push_stats:
+                    push_stats = convert_keyword_stats_to_platform_stats(
+                        push_stats,
+                        self.ctx.weight_config,
+                        self.ctx.rank_threshold,
+                    )
+
+                push_report_data = prepare_report_data(
+                    stats=push_stats,
+                    failed_ids=failed_ids,
+                    new_titles=self._build_ai_notification_new_titles(ai_filter_result, new_titles, mode),
+                    id_to_name=id_to_name,
+                    mode=mode,
+                    rank_threshold=self.rank_threshold,
+                    show_new_section=self.ctx.show_new_section,
+                )
+                return push_stats, push_report_data, push_rss_items or None, None
+            except Exception as e:
+                print(f"[推送] 推送专用兴趣文件处理失败: {e}，回退到主筛选结果")
+                return stats, report_data, rss_items, rss_new_items
+
+        return stats, report_data, rss_items, rss_new_items
+
     def _run_analysis_pipeline(
         self,
         data_source: Dict,
@@ -918,35 +1140,16 @@ class NewsAnalyzer:
         standalone_data: Optional[Dict] = None,
         ai_result: Optional[AIAnalysisResult] = None,
         current_results: Optional[Dict] = None,
+        title_info: Optional[Dict] = None,
+        raw_rss_items: Optional[List[Dict]] = None,
+        rss_new_urls: Optional[set] = None,
         schedule: ResolvedSchedule = None,
     ) -> bool:
         """统一的通知发送逻辑，包含所有判断条件，支持热榜+RSS合并推送+AI分析+独立展示区"""
         has_notification = self._has_notification_configured()
         cfg = self.ctx.config
 
-        # 检查是否有有效内容（热榜或RSS）
-        has_news_content = self._has_valid_content(stats, new_titles)
-        has_rss_content = bool(rss_items and len(rss_items) > 0)
-        has_any_content = has_news_content or has_rss_content
-
-        # 计算热榜匹配条数
-        news_count = sum(len(stat.get("titles", [])) for stat in stats) if stats else 0
-        rss_count = sum(stat.get("count", 0) for stat in rss_items) if rss_items else 0
-
-        if (
-            cfg["ENABLE_NOTIFICATION"]
-            and has_notification
-            and has_any_content
-        ):
-            # 输出推送内容统计
-            content_parts = []
-            if news_count > 0:
-                content_parts.append(f"热榜 {news_count} 条")
-            if rss_count > 0:
-                content_parts.append(f"RSS {rss_count} 条")
-            total_count = news_count + rss_count
-            print(f"[推送] 准备发送：{' + '.join(content_parts)}，合计 {total_count} 条")
-
+        if cfg["ENABLE_NOTIFICATION"] and has_notification:
             # 调度系统决策
             if not schedule.push:
                 print("[推送] 调度器: 当前时间段不执行推送")
@@ -961,6 +1164,39 @@ class NewsAnalyzer:
                 else:
                     print(f"[推送] 调度器: 时间段 {schedule.period_name or schedule.period_key} 今天首次推送")
 
+            # 准备报告数据
+            report_data = self.ctx.prepare_report(stats, failed_ids, new_titles, id_to_name, mode, frequency_file=self.frequency_file)
+            stats, report_data, rss_items, rss_new_items = self._prepare_notification_payload(
+                stats=stats,
+                report_data=report_data,
+                failed_ids=failed_ids,
+                new_titles=new_titles,
+                id_to_name=id_to_name,
+                mode=mode,
+                current_results=current_results,
+                title_info=title_info,
+                raw_rss_items=raw_rss_items,
+                rss_items=rss_items,
+                rss_new_items=rss_new_items,
+                rss_new_urls=rss_new_urls,
+            )
+
+            push_news_count = sum(len(stat.get("titles", [])) for stat in stats) if stats else 0
+            push_rss_count = sum(stat.get("count", 0) for stat in rss_items) if rss_items else 0
+
+            if push_news_count == 0 and push_rss_count == 0:
+                print("[推送] 推送专用筛选后无内容，跳过发送")
+                return False
+
+            # 输出推送内容统计（以最终推送筛选结果为准）
+            content_parts = []
+            if push_news_count > 0:
+                content_parts.append(f"热榜 {push_news_count} 条")
+            if push_rss_count > 0:
+                content_parts.append(f"RSS {push_rss_count} 条")
+            total_count = push_news_count + push_rss_count
+            print(f"[推送] 准备发送：{' + '.join(content_parts)}，合计 {total_count} 条")
+
             # AI 分析：优先使用传入的结果，避免重复分析
             if ai_result is None:
                 ai_config = cfg.get("AI_ANALYSIS", {})
@@ -969,9 +1205,6 @@ class NewsAnalyzer:
                         stats, rss_items, mode, report_type, id_to_name,
                         current_results=current_results, schedule=schedule
                     )
-
-            # 准备报告数据
-            report_data = self.ctx.prepare_report(stats, failed_ids, new_titles, id_to_name, mode, frequency_file=self.frequency_file)
 
             # 是否发送版本更新信息
             update_info_to_send = self.update_info if cfg["SHOW_VERSION_UPDATE"] else None
@@ -1010,21 +1243,6 @@ class NewsAnalyzer:
             print("⚠️ 警告：通知功能已启用但未配置任何通知渠道，将跳过通知发送")
         elif not cfg["ENABLE_NOTIFICATION"]:
             print(f"跳过{report_type}通知：通知功能已禁用")
-        elif (
-            cfg["ENABLE_NOTIFICATION"]
-            and has_notification
-            and not has_any_content
-        ):
-            mode_strategy = self._get_mode_strategy()
-            if self.report_mode == "incremental":
-                if not has_rss_content:
-                    print("跳过通知：增量模式下未检测到匹配的新闻和RSS")
-                else:
-                    print("跳过通知：增量模式下新闻未匹配到关键词")
-            else:
-                print(
-                    f"跳过通知：{mode_strategy['mode_name']}下未检测到匹配的新闻"
-                )
 
         return False
 
@@ -1691,6 +1909,9 @@ class NewsAnalyzer:
                 standalone_data=standalone_data,
                 ai_result=ai_result,
                 current_results=results,
+                title_info=title_info,
+                raw_rss_items=raw_rss_items,
+                rss_new_urls=rss_new_urls,
                 schedule=schedule,
             )
 

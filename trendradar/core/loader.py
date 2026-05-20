@@ -101,6 +101,8 @@ def _load_notification_config(config_data: Dict) -> Dict:
 
     return {
         "ENABLE_NOTIFICATION": notification.get("enabled", True),
+        "NOTIFICATION_FREQUENCY_FILE": notification.get("frequency_file", ""),
+        "NOTIFICATION_INTERESTS_FILE": notification.get("interests_file", ""),
         "MESSAGE_BATCH_SIZE": batch_size.get("default", 4000),
         "DINGTALK_BATCH_SIZE": batch_size.get("dingtalk", 20000),
         "FEISHU_BATCH_SIZE": batch_size.get("feishu", 29000),
