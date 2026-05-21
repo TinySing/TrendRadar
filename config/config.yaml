@@ -66,16 +66,16 @@ platforms:
     name: "华尔街见闻 最热"
   - id: "cls-hot"
     name: "财联社热门"
-  - id: "jin10"
-    name: "金十数据"
-  - id: "xueqiu"
-    name: "雪球"
+  # - id: "jin10"
+  #   name: "金十数据"             # 交易快讯太密，做公众号选题噪音偏高
+  # - id: "xueqiu"
+  #   name: "雪球"                 # 个股情绪和观点流偏多，不利于长期栏目化选题
 
   # === 科技类平台 ===
-  - id: "ithome"
-    name: "IT之家"
-  - id: "juejin"
-    name: "掘金"                   # 前端/开发者
+  # - id: "ithome"
+  #   name: "IT之家"               # 偏资讯搬运和参数快讯，不利于做面向公众的长期内容
+  # - id: "juejin"
+  #   name: "掘金"                 # 偏开发者社区，不适合作为大众内容主来源
   - id: "github"
     name: "GitHub"
   - id: "hackernews"
@@ -134,10 +134,10 @@ platforms:
   #   name: "格隆汇"               # 和雪球重复
 
   # 社交/娱乐（与兴趣方向不符）
-  - id: "weibo"
-    name: "微博"                 # 娱乐八卦为主
-  - id: "douyin"
-    name: "抖音"                 # 娱乐为主
+  # - id: "weibo"
+  #   name: "微博"                 # 适合追泛热点，不适合作为公众号主观察面
+  # - id: "douyin"
+  #   name: "抖音"                 # 短视频/娱乐噪音高
   # - id: "bilibili-hot-search"
   #   name: "bilibili 热搜"        # 偏娱乐/游戏
   # - id: "tieba"

@@ -33,17 +33,38 @@
 惊呆
 炸裂
 不敢相信
+看完即删
+疯传
+刷屏
 # 营销内容
 软文
 赞助
 推广
 恰饭
+引流
+加微
+加V
+VX
+免费资料
+资料包
+训练营
+社群
+# 灰产与投机
+暴富
+躺赚
+返利
+割韭菜
 # 娱乐八卦
 明星
 出轨
 离婚
 绯闻
 塌房
+# 擦边低俗
+暧昧
+桃色
+两性
+婚恋
 # 赌博诈骗
 博彩
 赌博
@@ -171,397 +192,112 @@
 
 
 # ═══════════════════════════════════════════════════════════════
-#                         科技领域
+#                         AI 产品与模型进展
 # ═══════════════════════════════════════════════════════════════
 
-[AI 相关]
-/(?<![a-zA-Z])ai(?![a-zA-Z])/
-人工智能
+[AI 产品与模型进展]
+/\bOpenAI\b/
+/\bChatGPT\b/
+/\bClaude\b/
+/\bAnthropic\b/
+/深度求索|幻方量化|梁文锋|\bDeepSeek\b/ => DeepSeek
+/\bGemini\b/
+/qwen|minimax|glm|kimi|moonshot|混元|文心|千问/ => 国产大模型
 大模型
+模型发布
+开源模型
+推理模型
 智能体
 多模态
-/\bLLM\b/
 /\bAgent\b/
-推理模型
-/\bMCP\b/
 /\bRAG\b/
+/\bSora\b/
 !广告
 !培训
 !兼职
-@15
+!课程
+!招生
+@12
 
-[芯片]
+[AI 应用与工具链]
+AI应用
+AI工具
+AI编程
+自动化
+工作流
+知识库
+/\bCursor\b/
+/\bWindsurf\b/
+/\bCopilot\b/
+/\bClaude Code\b/
+/\bMCP\b/
+/\bOllama\b/
+/\bvLLM\b/
+/\bComfyUI\b/
+/\bLangChain\b/
+/\bLlamaIndex\b/
+!广告
+!培训
+!兼职
+@12
+
+[芯片与算力基础设施]
+/英伟达|黄仁勋|\bNVIDIA\b|\bCUDA\b/ => 英伟达
+/苏姿丰|\bAMD\b|\bEPYC\b|\bRyzen\b/ => AMD
 芯片
-光刻机
 半导体
-
-/水电|雅鲁藏布江/ => 水电
-/光伏|太阳能/ => 光伏
-核能
-能源
-
-/自动驾驶|无人驾驶|智驾/ => 自动驾驶
-
-机器人
-/机械狗|四足/ => 机器狗
-具身智能
-
-/月球|登月|火星|宇宙|飞船|航天|空间站|卫星/ => 航天
-
-# 前沿科技
-量子
-脑机
-基因
-
-# 产业政策
-生产力
-
-
-# ═══════════════════════════════════════════════════════════════
-#                         财经
-# ═══════════════════════════════════════════════════════════════
-
-[A股行情]
-A股
-上证
-沪深
-创业板
-!预测
-!荐股
+光刻机
+GPU
+算力
+数据中心
+服务器
+/\bHBM\b/
+!招聘
 @10
 
-[美股行情]
-纳斯达克
-道琼斯
-标普
-/\bNasdaq\b/
-/\bS&P 500\b/
-!预测
-@8
+[科技巨头战略动作]
+/微软|\bMicrosoft\b|\bCopilot\b/ => 微软
+/谷歌|皮查伊|\bGoogle\b|\bAlphabet\b|\bGemini\b|\bDeepMind\b|\bWaymo\b/ => 谷歌
+/库克|\bApple\b|\biPhone\b|\biOS\b|\bVision Pro\b/ => 苹果
+/华为|任正非|余承东|鸿蒙|海思|昇腾/ => 华为
+/小米|雷军|小米汽车|小米SU7|澎湃OS/ => 小米
+/腾讯|马化腾|微信|\bTencent\b/ => 腾讯
+/阿里|阿里巴巴|蔡崇信|吴泳铭|钉钉/ => 阿里巴巴
+/字节|张一鸣|梁汝波|\bByteDance\b|\bTikTok\b/ => 字节跳动
+/特斯拉|马斯克|\bTesla\b|\bElon Musk\b|\bFSD\b/ => 特斯拉
+!招聘
+@12
 
-[宏观经济]
-美联储
-降息
-加息
-/\bCPI\b/
-通胀
-汇率
-人民币
-经济数据
-/\bFed\b/
-/\bFOMC\b/
+[宏观与政策对科技产业的影响]
+AI监管
+数据要素
+数据跨境
+开源政策
+网信办
+工信部
+发改委
+算力券
+东数西算
+出口管制
+关税
+补贴
+产业政策
+供应链
+反垄断
+备案
 !预测
-
-[加密货币]
-比特币
-以太坊
-/\bBitcoin\b/
-/\bEthereum\b/
-/\bBTC\b/
-/\bcrypto\b/
-Web3
-!诈骗
-!骗局
 @10
 
-[IPO融资]
-/\bIPO\b/
-融资
-上市
-A轮
-B轮
-独角兽
-/\bvaluation\b/
-
-
-
-# ═══════════════════════════════════════════════════════════════
-#                         国际局势
-# ═══════════════════════════════════════════════════════════════
-
-[中美博弈]
+[中美科技博弈与产业变化]
 中美
 贸易战
-关税
 制裁
 芯片禁令
 出口管制
-台海
-+关系
-
-[地缘政治]
-/\bNATO\b/
-北约
-乌克兰
-俄乌
-巴以冲突
-中东
-地缘
-战争
-冲突
+实体清单
+国产替代
+供应链迁移
+先进制程
+EDA
 !历史
-
-[全球经济]
-世界银行
-/\bIMF\b/
-/\bG7\b/
-/\bG20\b/
-全球化
-去全球化
-供应链
-!历史
-
-
-# ═══════════════════════════════════════════════════════════════
-#                         创新变现
-# ═══════════════════════════════════════════════════════════════
-
-[独立开发出海]
-独立开发
-/\bindiemaker\b/
-/\bindehacker\b/
-/\bsolopreneur\b/
-出海
-/\bSaaS\b/
-副业
-变现
-/\bside project\b/
-/\bproduct hunt\b/
-!诈骗
-!传销
 @10
-
-[AI 应用创业]
-/\bAI\s*(app|tool|product|startup)\b/
-AI变现
-AI创业
-AI工具
-/\bno.?code\b/
-低代码
-!广告
-@8
-
-[创业生态]
-Y Combinator
-/\bYC\b/
-/\bProduct Hunt\b/
-/\bHacker News\b/
-/\bVC\b/
-风险投资
-孵化器
-创业
-!传销
-
-
-# ═══════════════════════════════════════════════════════════════
-#                         开源社区
-# ═══════════════════════════════════════════════════════════════
-
-[GitHub 开源]
-/\bGitHub\b/
-开源
-/\bopen.?source\b/
-/\bGitHub Trending\b/
-/\bopen.?source\b/
-!招聘
-@10
-
-[Hugging Face & 模型发布]
-/\bHugging Face\b/
-/\bHuggingFace\b/
-模型发布
-开源模型
-/\bollama\b/
-/\bllama\.?cpp\b/
-/\bmistral\b/
-/\bgemma\b/
-/\bphi.?\d/
-@10
-
-
-# ═══════════════════════════════════════════════════════════════
-#                         云服务与基础设施
-# ═══════════════════════════════════════════════════════════════
-
-[云服务]
-/\bAWS\b/
-/\bAmazon Web Services\b/
-/\bGoogle Cloud\b/
-/\bGCP\b/
-/\bAzure\b/
-云计算
-!招聘
-@8
-
-[前端部署平台]
-/\bVercel\b/
-/\bNetlify\b/
-/\bCloudflare\b/
-/\bEdge\b/
-/\bServerless\b/
-/\bEdge Functions\b/
-/\bCDN\b/
-
-[数据库与后端服务]
-/\bSupabase\b/
-/\bPlanetScale\b/
-/\bNeon\b/
-/\bTurso\b/
-/\bPrisma\b/
-/\bDrizzle\b/
-
-
-# ═══════════════════════════════════════════════════════════════
-#                         设计工具与 AI 生成 UI
-# ═══════════════════════════════════════════════════════════════
-
-[设计工具]
-/\bFigma\b/
-/\bFramer\b/
-设计系统
-/\bUI kit\b/
-/\bdesign system\b/
-!招聘
-
-[AI 生成 UI]
-/\bv0\b/
-/\bLovable\b/
-/\bBolt\b/
-/\bcursor\b/
-/\bwindsurf\b/
-/\bAI.{0,4}(coding|code|UI|design)\b/
-AI编程
-AI写代码
-!招聘
-@10
-
-
-# ═══════════════════════════════════════════════════════════════
-#                         就业与职场
-# ═══════════════════════════════════════════════════════════════
-
-[科技裁员]
-裁员
-layoff
-/\blayoffs\b/
-大裁员
-降薪
-毕业
-!历史
-@8
-
-[AI 对就业影响]
-AI替代
-AI失业
-自动化
-程序员
-+就业
-@5
-
-
-# ═══════════════════════════════════════════════════════════════
-#                         创作者经济
-# ═══════════════════════════════════════════════════════════════
-
-[内容变现]
-/\bNewsletter\b/
-/\bSubstack\b/
-创作者经济
-内容变现
-数字产品
-知识付费
-/\bcreator economy\b/
-!诈骗
-@8
-
-[视频与播客]
-/\bYouTube\b/
-/\bPodcast\b/
-播客
-视频博主
-/\bYouTuber\b/
-+变现
-!娱乐
-@5
-
-# ═══════════════════════════════════════════════════════════════
-#                         企业与品牌
-# ═══════════════════════════════════════════════════════════════
-
-/胖东来|于东来/ => 胖东来
-
-/深度求索|幻方量化|梁文锋|\bDeepSeek\b/ => DeepSeek
-
-/华为|任正非|余承东|鸿蒙|海思|昇腾|鲲鹏|\bHUAWEI\b|\bHarmonyOS\b|\bHiSilicon\b/ => 华为
-
-/比亚迪|王传福|方程豹|腾势|仰望|弗迪|刀片电池|云辇|\bBYD\b|\bDenza\b|\bYangwang\b/ => 比亚迪
-
-/大疆|汪滔|灵眸|如影|\bDJI\b|\bRoboMaster\b|\bMavic\b|\bZenmuse\b/ => 大疆
-
-/宇树|王兴兴|\bUnitree\b/ => 宇树机器人
-
-/智元|灵犀|稚晖君|彭志辉|AgiBot/ => 智元机器人
-/众擎|EngineAI|赵同阳/ => 众擎机器人
-
-
-
-
-/京东|刘强东|\bJD\b|\bJingdong\b/ => 京东
-
-/字节|张一鸣|梁汝波|抖音|\bByteDance\b|\bTikTok\b|\bDouyin\b|\bLark\b|\bCapCut\b/ => 字节跳动
-
-/腾讯|鹅厂|马化腾|微信|QQ|天美|阅文集团|微众银行|\bTencent\b|\bPony Ma\b|\bWeChat\b|\bLightSpeed\b|\bWeBank\b/ => 腾讯
-
-/小米|雷军|卢伟冰|米家|红米|小米汽车|小米SU7|澎湃OS|小爱同学|米粉|\bXiaomi\b|\bMi\b|\bMIUI\b|\bHyperOS\b|\bRedmi\b|\bPOCO\b|\bSU7\b/ => 小米
-
-/qwen|minimax|glm|kimi|moonshot|混元|文心|千问/ => 国产大模型
-
-/阿里|阿里巴巴|淘宝|天猫|支付宝|蚂蚁集团|菜鸟|钉钉|逍遥子|蔡崇信|吴泳铭|\bAlibaba\b|\bAlipay\b|\bAnt Group\b/ => 阿里巴巴
-
-/百度|李彦宏|文心一言|萝卜快跑|飞桨|\bBaidu\b|\bERNIE\b/ => 百度
-
-/美团|王兴|外卖|骑手|即时配送|\bMeituan\b/ => 美团
-
-/拼多多|黄峥|多多买菜|\bTemu\b|\bPDD\b/ => 拼多多
-
-/网易|丁磊|云音乐|\bNetEase\b/ => 网易
-
-/滴滴|程维|\bDiDi\b/ => 滴滴
-
-/特斯拉|马斯克|\bTesla\b|\bElon Musk\b|\bCybertruck\b|\bModel 3\b|\bModel Y\b|\bModel S\b|\bModel X\b|\bFSD\b/ => 特斯拉
-
-/英伟达|黄仁勋|\bNVIDIA\b|\bGeForce\b|\bRTX\b|\bCUDA\b|\bJensen Huang\b/ => 英伟达
-/苏姿丰|锐龙|霄龙|\bAMD\b|\bRyzen\b|\bEPYC\b|\bRadeon\b|\bLisa Su\b/ => AMD
-
-/微软|\bMicrosoft\b|\bWindows\b|\bAzure\b|\bSatya Nadella\b|\bCopilot\b/ => 微软
-/谷歌|皮查伊|安卓|油管|\bGoogle\b|\bAlphabet\b|\bAndroid\b|\bChrome\b|\bYouTube\b|\bGemini\b|\bDeepMind\b|\bWaymo\b/ => 谷歌
-/库克|\biPhone\b|\biPad\b|\bMacBook\b|\biOS\b|\bVision Pro\b|\bAirPods\b|\bApple\b|\bTim Cook\b/ => 苹果
-
-/\bOpenAI\b|\bChatGPT\b|\bSora\b|\bDALL-E\b|\bSam Altman\b|\bGreg Brockman\b/ => OpenAI
-/\bAnthropic\b|\bClaude\b|\bDario Amodei\b/ => Claude
-
-
-# ═══════════════════════════════════════════════════════════════
-#                         国家与地区
-# ═══════════════════════════════════════════════════════════════
-
-[中国]
-国产
-中国
-
-[东亚]
-日本
-朝鲜
-韩国
-
-[北美]
-美国
-加拿大
-
-[西欧]
-法国
-英国
-
-/俄罗斯|俄国/ => 俄罗斯
-
-印度
