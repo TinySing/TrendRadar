@@ -194,7 +194,7 @@ class AppContext:
 
             self._storage_manager = get_storage_manager(
                 backend_type=storage_config.get("BACKEND", "auto"),
-                data_dir=local_config.get("DATA_DIR", "output"),
+                data_dir=str(self.data_dir),
                 enable_txt=storage_config.get("FORMATS", {}).get("TXT", True),
                 enable_html=storage_config.get("FORMATS", {}).get("HTML", True),
                 remote_config={

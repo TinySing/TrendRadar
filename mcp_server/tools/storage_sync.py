@@ -13,6 +13,8 @@ from typing import Dict, List, Optional
 
 import yaml
 
+from trendradar.core.loader import get_local_data_dir
+
 from ..utils.errors import MCPError
 
 
@@ -109,10 +111,10 @@ class StorageSyncTools:
 
     def _get_local_data_dir(self) -> Path:
         """获取本地数据目录"""
-        storage_config = self._get_storage_config()
-        local_config = storage_config.get("local", {})
-        data_dir = local_config.get("data_dir", "output")
-        return self.project_root / data_dir
+        return get_local_data_dir(
+            config_path=self.project_root / "config" / "config.yaml",
+            base_dir=self.project_root,
+        )
 
     def _parse_date_folder_name(self, folder_name: str) -> Optional[datetime]:
         """

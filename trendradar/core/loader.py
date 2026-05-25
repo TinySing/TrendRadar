@@ -577,13 +577,20 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
     if config_path is None:
         config_path = os.environ.get("CONFIG_PATH", "config/config.yaml")
 
-    if not Path(config_path).exists():
+    config_path_obj = Path(config_path).resolve()
+    config_base_dir = (
+        config_path_obj.parent.parent
+        if config_path_obj.parent.name == "config"
+        else config_path_obj.parent
+    )
+
+    if not config_path_obj.exists():
         raise FileNotFoundError(f"配置文件 {config_path} 不存在")
 
-    with open(config_path, "r", encoding="utf-8") as f:
+    with open(config_path_obj, "r", encoding="utf-8") as f:
         config_data = yaml.safe_load(f)
 
-    print(f"配置文件加载成功: {config_path}")
+    print(f"配置文件加载成功: {config_path_obj}")
 
     # 合并所有配置
     config = {}
@@ -603,7 +610,7 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
     # 统一调度配置
     config["SCHEDULE"] = _load_schedule_config(config_data)
     config["_TIMELINE_DATA"] = _load_timeline_data(
-        str(Path(config_path).parent) if config_path else "config"
+        str(config_path_obj.parent) if config_path else "config"
     )
 
     # 权重配置
@@ -636,6 +643,11 @@ def load_config(config_path: Optional[str] = None) -> Dict[str, Any]:
 
     # 存储配置
     config["STORAGE"] = _load_storage_config(config_data)
+    resolved_data_dir = get_local_data_dir(
+        config=config,
+        base_dir=config_base_dir,
+    )
+    config["STORAGE"]["LOCAL"]["DATA_DIR"] = str(resolved_data_dir)
 
     # Webhook 配置
     config.update(_load_webhook_config(config_data))

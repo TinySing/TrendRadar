@@ -55,59 +55,55 @@ schedule:
 platforms:
   enabled: true                         # 是否启用热榜平台抓取
   sources:
-  # === 综合新闻媒体类 ===
+  # === 推荐保留：冷启动阶段的广覆盖组合 ===
+  # 适用目标：
+  # 1. 做“前一日全网热点 + 全网新闻”的综合公众号
+  # 2. 优先覆盖大众日常真实接触的平台，而不是只保留低噪音新闻源
+  # 3. 冷启动先广撒网，后续再按阅读数据和转化效果收缩
+
+  # 主流新闻面
   - id: "thepaper"
     name: "澎湃新闻"
+  - id: "tencent-hot"
+    name: "腾讯新闻 综合早报"
+  - id: "ifeng"
+    name: "凤凰网"
   - id: "zaobao"
-    name: "联合早报"               # 新加坡，国际新闻中立视角
+    name: "联合早报"
+  - id: "cankaoxiaoxi"
+    name: "参考消息"
 
-  # === 财经投资类 ===
+  # 热点聚合 / 搜索入口
+  - id: "toutiao"
+    name: "今日头条"
+  - id: "baidu"
+    name: "百度热搜"
+  - id: "weibo"
+    name: "微博"
+  - id: "douyin"
+    name: "抖音"
+
+  # 讨论面 / 年轻用户补充
+  - id: "zhihu"
+    name: "知乎"
+  - id: "bilibili-hot-search"
+    name: "bilibili 热搜"
+  - id: "tieba"
+    name: "贴吧"
+
+  # 财经 / 科技产业补充
   - id: "wallstreetcn-hot"
     name: "华尔街见闻 最热"
   - id: "cls-hot"
     name: "财联社热门"
-  # - id: "jin10"
-  #   name: "金十数据"             # 交易快讯太密，做公众号选题噪音偏高
-  # - id: "xueqiu"
-  #   name: "雪球"                 # 个股情绪和观点流偏多，不利于长期栏目化选题
-
-  # === 科技类平台 ===
-  # - id: "ithome"
-  #   name: "IT之家"               # 偏资讯搬运和参数快讯，不利于做面向公众的长期内容
-  # - id: "juejin"
-  #   name: "掘金"                 # 偏开发者社区，不适合作为大众内容主来源
-  - id: "github"
-    name: "GitHub"
-  - id: "hackernews"
-    name: "Hacker News"
-  - id: "v2ex"
-    name: "V2EX"
-  - id: "sspai"
-    name: "少数派"
-  - id: "producthunt"
-    name: "ProductHunt"
   - id: "36kr-quick"
     name: "36氪快讯"
-
-  # === 社区类 ===
-  - id: "zhihu"
-    name: "知乎"
 
   # ──────────────────────────────────────────────────────────────
   # 已注释平台（按类别保留，需要时取消注释）
   # ──────────────────────────────────────────────────────────────
 
-  # 综合新闻（娱乐/重复较多）
-  # - id: "toutiao"
-  #   name: "今日头条"             # 娱乐内容多，关键词过滤成本高
-  # - id: "baidu"
-  #   name: "百度热搜"             # 同上
-  # - id: "tencent-hot"
-  #   name: "腾讯新闻 综合早报"   # 和澎湃重复
-  # - id: "ifeng"
-  #   name: "凤凰网"               # 和澎湃重复
-  # - id: "cankaoxiaoxi"
-  #   name: "参考消息"             # 官方视角，视角较窄
+  # 综合新闻（可选补充）
   # - id: "sputniknewscn"
   #   name: "卫星通讯社"           # 俄方立场，视角偏
   # - id: "mktnews"
@@ -132,16 +128,12 @@ platforms:
   #   name: "快讯通"               # 同上
   # - id: "gelonghui"
   #   name: "格隆汇"               # 和雪球重复
+  # - id: "jin10"
+  #   name: "金十数据"             # 交易快讯太密，做公众号日报噪音偏高
+  # - id: "xueqiu"
+  #   name: "雪球"                 # 个股观点流偏多，不适合作为主资讯面
 
-  # 社交/娱乐（与兴趣方向不符）
-  # - id: "weibo"
-  #   name: "微博"                 # 适合追泛热点，不适合作为公众号主观察面
-  # - id: "douyin"
-  #   name: "抖音"                 # 短视频/娱乐噪音高
-  # - id: "bilibili-hot-search"
-  #   name: "bilibili 热搜"        # 偏娱乐/游戏
-  # - id: "tieba"
-  #   name: "贴吧"                 # 偏娱乐
+  # 社交/娱乐（可再扩，但噪音会继续上升）
   # - id: "hupu"
   #   name: "虎扑"                 # 体育为主
   # - id: "douban"
@@ -152,6 +144,20 @@ platforms:
   #   name: "爱奇艺热播榜"        # 娱乐
 
   # 科技（重复或方向偏）
+  # - id: "ithome"
+  #   name: "IT之家"               # 偏科技快讯
+  # - id: "juejin"
+  #   name: "掘金"                 # 开发者社区
+  # - id: "github"
+  #   name: "GitHub"               # 开发者社区
+  # - id: "hackernews"
+  #   name: "Hacker News"          # 海外技术社区
+  # - id: "v2ex"
+  #   name: "V2EX"                 # 技术社区
+  # - id: "sspai"
+  #   name: "少数派"               # 数码生活方式媒体
+  # - id: "producthunt"
+  #   name: "ProductHunt"          # 海外产品社区
   # - id: "solidot"
   #   name: "Solidot"              # 和IT之家重复
   # - id: "nowcoder"
@@ -239,11 +245,26 @@ rss:
   # - 0：禁用此频道的新鲜度过滤，推送所有文章
   feeds:
 
-    # ── 综合科技新闻 ──────────────────────────────────────────────
-    - id: "hacker-news"
-      name: "Hacker News"
-      url: "https://hnrss.org/frontpage"
+    # RSS 在当前账号中的定位：
+    # 1. 不是主来源，主来源仍然是国内热榜平台
+    # 2. 只作为“国际新闻 / 海外科技 / 全球财经”的补充层
+    # 3. 控制数量，避免国外工程博客淹没掉你的大众内容
 
+    # ── 国际综合新闻补充 ──────────────────────────────────────────
+    - id: "yahoo-news"
+      name: "Yahoo News"
+      url: "https://www.yahoo.com/news/rss"
+
+    - id: "scmp"
+      name: "South China Morning Post"
+      url: "https://www.scmp.com/rss/91/feed"
+
+    # ── 国际财经补充 ──────────────────────────────────────────────
+    - id: "yahoo-finance"
+      name: "雅虎财经"
+      url: "https://finance.yahoo.com/news/rssindex"
+
+    # ── 海外科技新闻补充 ──────────────────────────────────────────
     - id: "the-verge"
       name: "The Verge"
       url: "https://www.theverge.com/rss/index.xml"
@@ -252,210 +273,11 @@ rss:
       name: "TechCrunch"
       url: "https://techcrunch.com/feed/"
 
-    - id: "ars-technica"
-      name: "Ars Technica"
-      url: "http://feeds.arstechnica.com/arstechnica/index"
+    - id: "venturebeat"
+      name: "VentureBeat"
+      url: "http://venturebeat.com/feed/"
 
-    # - id: "venturebeat"
-    #   name: "VentureBeat"
-    #   url: "http://venturebeat.com/feed/"
-
-    # - id: "techcrunch-startups"
-    #   name: "TechCrunch Startups"
-    #   url: "https://techcrunch.com/startups/feed/"
-
-    # - id: "wired"
-    #   name: "Wired Science"
-    #   url: "https://www.wired.com/feed/category/science/latest/rss"
-
-    # ── AI / ML 研究 ──────────────────────────────────────────────
-    - id: "openai-engineering"
-      name: "OpenAI Engineering"
-      url: "https://openai.com/news/engineering/rss.xml"
-      max_age_days: 3
-
-    - id: "deepmind-blog"
-      name: "DeepMind Blog"
-      url: "https://deepmind.com/blog/feed/basic/"
-      max_age_days: 3
-
-    - id: "nvidia-dev-blog"
-      name: "NVIDIA Developer Blog"
-      url: "https://developer.nvidia.com/blog/feed"
-      max_age_days: 3
-
-    - id: "the-gradient"
-      name: "The Gradient"
-      url: "https://thegradient.pub/rss/"
-      max_age_days: 7
-
-    # - id: "unite-ai"
-    #   name: "Unite.AI"
-    #   url: "https://www.unite.ai/feed/"
-
-    # - id: "mit-news-ai"
-    #   name: "MIT News - AI"
-    #   url: "https://news.mit.edu/rss/topic/artificial-intelligence2"
-    #   max_age_days: 3
-
-    # - id: "lillog"
-    #   name: "Lil'Log (Lilian Weng)"
-    #   url: "https://lilianweng.github.io/lil-log/feed.xml"
-    #   max_age_days: 30              # 更新极慢，放宽
-
-    # - id: "google-ai-blog"
-    #   name: "Google AI Blog"
-    #   url: "http://googleresearch.blogspot.com/atom.xml"
-    #   max_age_days: 7
-
-    # ── HN 特殊信号 ───────────────────────────────────────────────
-    - id: "hn-show"
-      name: "HN: Show HN"
-      url: "http://hnrss.org/show"
-
-    - id: "hn-launches"
-      name: "HN: Launches"
-      url: "https://hnrss.org/launches"
-
-    # ── 苹果 ──────────────────────────────────────────────────────
-    - id: "9to5mac"
-      name: "9to5Mac"
-      url: "https://9to5mac.com/feed"
-
-    # - id: "macrumors"
-    #   name: "MacRumors"
-    #   url: "http://feeds.macrumors.com/MacRumors-Mac"
-
-    # - id: "daring-fireball"
-    #   name: "Daring Fireball"
-    #   url: "https://daringfireball.net/feeds/main"
-    #   max_age_days: 7
-
-    # - id: "apple-newsroom"
-    #   name: "Apple Newsroom"
-    #   url: "https://www.apple.com/newsroom/rss-feed.rss"
-
-    # ── 开源 / 工程博客 ───────────────────────────────────────────
-    - id: "github-blog"
-      name: "GitHub Blog"
-      url: "https://github.blog/feed/"
-      max_age_days: 3
-
-    - id: "cloudflare-blog"
-      name: "Cloudflare Blog"
-      url: "https://blog.cloudflare.com/rss/"
-      max_age_days: 3
-
-    # - id: "netflix-techblog"
-    #   name: "Netflix TechBlog"
-    #   url: "https://netflixtechblog.com/feed"
-    #   max_age_days: 7
-
-    # - id: "stripe-blog"
-    #   name: "Stripe Blog"
-    #   url: "https://stripe.com/blog/feed.rss"
-    #   max_age_days: 7
-
-    # - id: "engineering-meta"
-    #   name: "Engineering at Meta"
-    #   url: "https://engineering.fb.com/feed/"
-    #   max_age_days: 7
-
-    # ── 创业 / 投资 / 行业分析 ────────────────────────────────────
-    - id: "pragmatic-engineer"
-      name: "The Pragmatic Engineer"
-      url: "https://blog.pragmaticengineer.com/rss/"
-      max_age_days: 7
-
-    # - id: "pg-essays"
-    #   name: "Paul Graham Essays"
-    #   url: "http://www.aaronsw.com/2002/feeds/pgessays.rss"
-    #   max_age_days: 30              # 更新极慢
-
-    # - id: "benedict-evans"
-    #   name: "Benedict Evans"
-    #   url: "http://ben-evans.com/benedictevans?format=rss"
-    #   max_age_days: 14
-
-    # - id: "first-round-review"
-    #   name: "First Round Review"
-    #   url: "http://firstround.com/review/feed.xml"
-    #   max_age_days: 14
-
-    # - id: "lethain"
-    #   name: "Irrational Exuberance (Will Larson)"
-    #   url: "https://lethain.com/feeds/"
-    #   max_age_days: 14
-
-    # - id: "sam-altman"
-    #   name: "Sam Altman Blog"
-    #   url: "http://blog.samaltman.com/posts.atom"
-    #   max_age_days: 30
-
-    # ── 前端 / 开发者 ─────────────────────────────────────────────
-    - id: "smashing-magazine"
-      name: "Smashing Magazine"
-      url: "https://www.smashingmagazine.com/feed/"
-      max_age_days: 3
-
-    # - id: "joshcomeau"
-    #   name: "Josh Comeau"
-    #   url: "https://joshwcomeau.com/rss.xml"
-    #   max_age_days: 14
-
-    # - id: "julia-evans"
-    #   name: "Julia Evans"
-    #   url: "https://jvns.ca/atom.xml"
-    #   max_age_days: 7
-
-    # - id: "overreacted"
-    #   name: "Overreacted (Dan Abramov)"
-    #   url: "https://overreacted.io/rss.xml"
-    #   max_age_days: 30
-
-    # - id: "web-dev"
-    #   name: "web.dev"
-    #   url: "https://web.dev/feed.xml"
-    #   max_age_days: 7
-
-    # - id: "css-tricks"
-    #   name: "CSS-Tricks"
-    #   url: "https://feeds.feedburner.com/CssTricks"
-    #   max_age_days: 3
-
-    # ── 科学 ──────────────────────────────────────────────────────
-    - id: "quanta-magazine"
-      name: "Quanta Magazine"
-      url: "http://www.quantamagazine.org/feed/"
-      max_age_days: 7
-
-    # - id: "singularity-hub"
-    #   name: "Singularity Hub"
-    #   url: "https://singularityhub.com/feed/"
-    #   max_age_days: 3
-
-    # - id: "science-alert"
-    #   name: "ScienceAlert"
-    #   url: "https://www.sciencealert.com/rss"
-
-    # ── 财经 ──────────────────────────────────────────────────────
-    - id: "yahoo-finance"
-      name: "雅虎财经"
-      url: "https://finance.yahoo.com/news/rssindex"
-
-    # - id: "cnbc"
-    #   name: "CNBC"
-    #   url: "https://www.cnbc.com/id/100003114/device/rss/rss.html"
-
-    # - id: "wsj-world"
-    #   name: "WSJ World News"
-    #   url: "https://feeds.a.dj.com/rss/RSSWorldNews.xml"   # 大部分付费墙
-
-    # ── 国际视角 / 中国 ───────────────────────────────────────────
-    - id: "scmp"
-      name: "South China Morning Post"
-      url: "https://www.scmp.com/rss/91/feed"
-
+    # ── 备选：如后续想增强国际时政，可按需打开 ───────────────────
     # - id: "bbc-news"
     #   name: "BBC News"
     #   url: "http://feeds.bbci.co.uk/news/rss.xml"
@@ -463,6 +285,31 @@ rss:
     # - id: "guardian-world"
     #   name: "The Guardian World"
     #   url: "https://www.theguardian.com/world/rss"
+
+    # ── 备选：如后续想增强科技深度，可按需打开 ───────────────────
+    # - id: "ars-technica"
+    #   name: "Ars Technica"
+    #   url: "http://feeds.arstechnica.com/arstechnica/index"
+
+    # - id: "openai-engineering"
+    #   name: "OpenAI Engineering"
+    #   url: "https://openai.com/news/engineering/rss.xml"
+    #   max_age_days: 3
+
+    # - id: "deepmind-blog"
+    #   name: "DeepMind Blog"
+    #   url: "https://deepmind.com/blog/feed/basic/"
+    #   max_age_days: 3
+
+    # - id: "nvidia-dev-blog"
+    #   name: "NVIDIA Developer Blog"
+    #   url: "https://developer.nvidia.com/blog/feed"
+    #   max_age_days: 3
+
+    # - id: "quanta-magazine"
+    #   name: "Quanta Magazine"
+    #   url: "http://www.quantamagazine.org/feed/"
+    #   max_age_days: 7
 
 
 
