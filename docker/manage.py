@@ -14,7 +14,7 @@ from datetime import datetime
 
 # Web 服务器配置
 WEBSERVER_PORT = int(os.environ.get("WEBSERVER_PORT", "8080"))
-WEBSERVER_DIR = "/app/output"
+WEBSERVER_DIR = os.environ.get("LOCAL_DATA_DIR", "/app/output").strip() or "/app/output"
 WEBSERVER_PID_FILE = "/tmp/webserver.pid"
 def get_timestamp():
     """获取当前时间戳字符串"""
@@ -337,7 +337,7 @@ def show_files():
     """显示输出文件"""
     print("📁 输出文件:")
 
-    output_dir = Path("/app/output")
+    output_dir = Path(WEBSERVER_DIR)
     if not output_dir.exists():
         print("  📭 输出目录不存在")
         return

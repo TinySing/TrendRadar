@@ -580,7 +580,7 @@ class DataService:
             系统状态字典
         """
         # 获取数据统计
-        output_dir = self.parser.project_root / "output"
+        output_dir = self.parser.data_dir
 
         total_storage = 0
 

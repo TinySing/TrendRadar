@@ -84,6 +84,11 @@ class AppContext:
         return self.config.get("TIMEZONE", DEFAULT_TIMEZONE)
 
     @property
+    def data_dir(self) -> Path:
+        """获取本地数据目录。"""
+        return Path(self.config.get("STORAGE", {}).get("LOCAL", {}).get("DATA_DIR", "output"))
+
+    @property
     def rank_threshold(self) -> int:
         """获取排名阈值"""
         return self.config.get("RANK_THRESHOLD", 50)
@@ -208,8 +213,8 @@ class AppContext:
         return self._storage_manager
 
     def get_output_path(self, subfolder: str, filename: str) -> str:
-        """获取输出路径（扁平化结构：output/类型/日期/文件名）"""
-        output_dir = Path("output") / subfolder / self.format_date()
+        """获取输出路径（扁平化结构：data_dir/类型/日期/文件名）"""
+        output_dir = self.data_dir / subfolder / self.format_date()
         output_dir.mkdir(parents=True, exist_ok=True)
         return str(output_dir / filename)
 
@@ -331,7 +336,7 @@ class AppContext:
             mode=mode,
             update_info=update_info,
             rank_threshold=self.rank_threshold,
-            output_dir="output",
+            output_dir=str(self.data_dir),
             date_folder=self.format_date(),
             time_filename=self.format_time(),
             render_html_func=lambda *args, **kwargs: self.render_html(*args, rss_items=rss_items, rss_new_items=rss_new_items, ai_analysis=ai_analysis, standalone_data=standalone_data, **kwargs),

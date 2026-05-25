@@ -9,7 +9,7 @@ from trendradar.core.config import (
     limit_accounts,
     get_account_at_index,
 )
-from trendradar.core.loader import load_config
+from trendradar.core.loader import load_config, get_local_data_dir
 from trendradar.core.frequency import load_frequency_words, matches_word_groups
 from trendradar.core.scheduler import Scheduler, ResolvedSchedule
 from trendradar.core.data import (
@@ -31,6 +31,7 @@ __all__ = [
     "limit_accounts",
     "get_account_at_index",
     "load_config",
+    "get_local_data_dir",
     "load_frequency_words",
     "matches_word_groups",
     # 数据处理

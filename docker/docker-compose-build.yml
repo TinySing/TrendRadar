@@ -11,12 +11,13 @@ services:
 
     volumes:
       - ../config:/app/config:ro
-      - ../output:/app/output
+      - ${SHARED_OUTPUT_DIR:-../output}:${LOCAL_DATA_DIR:-/app/output}
 
     environment:
       - TZ=Asia/Shanghai
       # Web 服务器
       - WEBSERVER_PORT=${WEBSERVER_PORT:-8080}
+      - LOCAL_DATA_DIR=${LOCAL_DATA_DIR:-/app/output}
       # 通知渠道
       - FEISHU_WEBHOOK_URL=${FEISHU_WEBHOOK_URL:-}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
@@ -69,8 +70,9 @@ services:
 
     volumes:
       - ../config:/app/config:ro
-      - ../output:/app/output
+      - ${SHARED_OUTPUT_DIR:-../output}:${LOCAL_DATA_DIR:-/app/output}
 
     environment:
       - TZ=Asia/Shanghai
       - MCP_PORT=${MCP_PORT:-3333}
+      - LOCAL_DATA_DIR=${LOCAL_DATA_DIR:-/app/output}

@@ -13,6 +13,7 @@ from datetime import datetime
 
 import yaml
 
+from trendradar.core import get_local_data_dir
 from ..utils.errors import FileParseError, DataNotFoundError
 from .cache_service import get_cache
 
@@ -33,6 +34,10 @@ class ParserService:
         else:
             self.project_root = Path(project_root)
 
+        self.data_dir = get_local_data_dir(
+            config_path=self.project_root / "config" / "config.yaml",
+            base_dir=self.project_root,
+        )
         self.cache = get_cache()
 
         # frequency_words.txt mtime 缓存
@@ -74,7 +79,7 @@ class ParserService:
             数据库文件路径，如果不存在则返回 None
         """
         date_str = self.get_date_folder_name(date)
-        db_path = self.project_root / "output" / db_type / f"{date_str}.db"
+        db_path = self.data_dir / db_type / f"{date_str}.db"
         if db_path.exists():
             return db_path
         return None
@@ -432,7 +437,7 @@ class ParserService:
         Returns:
             日期字符串列表（YYYY-MM-DD 格式，降序排列）
         """
-        db_dir = self.project_root / "output" / db_type
+        db_dir = self.data_dir / db_type
         if not db_dir.exists():
             return []
 

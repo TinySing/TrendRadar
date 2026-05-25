@@ -7,6 +7,7 @@
 from pathlib import Path
 from typing import Dict, List, Optional
 
+from trendradar.core import get_local_data_dir
 from ..services.data_service import DataService
 from ..utils.validators import validate_platforms
 from ..utils.errors import MCPError, CrawlTaskError
@@ -246,8 +247,12 @@ class SystemManagementTools:
                 failed_ids=failed_ids, crawl_time=crawl_time_str, crawl_date=crawl_date
             )
 
+            local_data_dir = get_local_data_dir(
+                config_path=self.project_root / "config" / "config.yaml",
+                base_dir=self.project_root,
+            )
             storage = LocalStorageBackend(
-                data_dir=str(self.project_root / "output"),
+                data_dir=str(local_data_dir),
                 enable_txt=True, enable_html=True, timezone=timezone
             )
 

@@ -21,7 +21,12 @@ import requests
 
 from trendradar.context import AppContext
 from trendradar import __version__
-from trendradar.core import load_config, parse_multi_account_config, validate_paired_configs
+from trendradar.core import (
+    get_local_data_dir,
+    load_config,
+    parse_multi_account_config,
+    validate_paired_configs,
+)
 from trendradar.core.analyzer import convert_keyword_stats_to_platform_stats, count_rss_frequency
 from trendradar.crawler import DataFetcher
 from trendradar.report import prepare_report_data
@@ -1281,7 +1286,7 @@ class NewsAnalyzer:
             f"配置的监控平台: {[p.get('name', p['id']) for p in self.ctx.platforms]}"
         )
         print(f"开始爬取数据，请求间隔 {self.request_interval} 毫秒")
-        Path("output").mkdir(parents=True, exist_ok=True)
+        self.ctx.data_dir.mkdir(parents=True, exist_ok=True)
 
         results, id_to_name, failed_ids = self.data_fetcher.crawl_websites(
             ids, self.request_interval
@@ -1685,10 +1690,10 @@ class NewsAnalyzer:
                 get_time_func=self.ctx.get_time,
             )
 
-            # 保存 HTML 文件（扁平化结构：output/html/日期/）
+            # 保存 HTML 文件（扁平化结构：data_dir/html/日期/）
             date_folder = self.ctx.format_date()
             time_filename = self.ctx.format_time()
-            output_dir = Path("output") / "html" / date_folder
+            output_dir = self.ctx.data_dir / "html" / date_folder
             output_dir.mkdir(parents=True, exist_ok=True)
 
             file_path = output_dir / f"rss_{time_filename}.html"
@@ -1889,7 +1894,8 @@ class NewsAnalyzer:
 
         if html_file:
             print(f"HTML报告已生成: {html_file}")
-            print(f"最新报告已更新: output/html/latest/{self.report_mode}.html")
+            latest_report = self.ctx.data_dir / "html" / "latest" / f"{self.report_mode}.html"
+            print(f"最新报告已更新: {latest_report}")
 
         # 发送通知
         if mode_strategy["should_send_notification"]:
@@ -1973,6 +1979,7 @@ def _save_doctor_report(
     warn_count: int,
     fail_count: int,
     config_path: Optional[str],
+    output_root: Path,
 ) -> None:
     """保存 doctor 体检报告到 JSON 文件"""
     report = {
@@ -1992,7 +1999,7 @@ def _save_doctor_report(
     }
 
     try:
-        output_dir = Path("output") / "meta"
+        output_dir = output_root / "meta"
         output_dir.mkdir(parents=True, exist_ok=True)
         output_path = output_dir / "doctor_report.json"
         output_path.write_text(
@@ -2054,9 +2061,10 @@ def _run_doctor(config_path: Optional[str] = None) -> bool:
 
     # 后续检查依赖配置对象
     if config:
+        ctx = AppContext(config)
+
         # 4) 调度配置检查
         try:
-            ctx = AppContext(config)
             schedule = ctx.create_scheduler().resolve()
             detail = f"调度解析成功（report_mode={schedule.report_mode}, ai_mode={schedule.ai_mode}）"
             _record_doctor_result(results, "pass", "调度配置", detail)
@@ -2107,7 +2115,7 @@ def _run_doctor(config_path: Optional[str] = None) -> bool:
                     "GitHub Actions + auto 模式未完整配置远程存储，可能导致数据丢失"
                 )
             else:
-                sm = AppContext(config).get_storage_manager()
+                sm = ctx.get_storage_manager()
                 _record_doctor_result(results, "pass", "存储配置", f"当前后端: {sm.backend_name}")
         except Exception as e:
             _record_doctor_result(results, "fail", "存储配置", f"检查失败: {e}")
@@ -2186,7 +2194,7 @@ def _run_doctor(config_path: Optional[str] = None) -> bool:
 
         # 8) 输出目录可写检查
         try:
-            output_dir = Path("output")
+            output_dir = ctx.data_dir
             output_dir.mkdir(parents=True, exist_ok=True)
             probe_file = output_dir / ".doctor_write_probe"
             probe_file.write_text("ok", encoding="utf-8")
@@ -2199,7 +2207,19 @@ def _run_doctor(config_path: Optional[str] = None) -> bool:
     warn_count = sum(1 for status, _, _ in results if status == "warn")
     fail_count = sum(1 for status, _, _ in results if status == "fail")
 
-    _save_doctor_report(results, pass_count, warn_count, fail_count, config_path)
+    doctor_output_root = (
+        ctx.data_dir
+        if config
+        else get_local_data_dir(config_path=config_path)
+    )
+    _save_doctor_report(
+        results,
+        pass_count,
+        warn_count,
+        fail_count,
+        config_path,
+        doctor_output_root,
+    )
 
     print("-" * 60)
     print(f"体检结果: ✅ {pass_count} 项通过  ⚠️ {warn_count} 项警告  ❌ {fail_count} 项失败")
@@ -2250,7 +2270,7 @@ def _create_test_html_file(ctx: AppContext) -> Optional[str]:
     """创建邮件测试用 HTML 文件"""
     try:
         now = ctx.get_time()
-        output_dir = Path("output") / "html" / ctx.format_date()
+        output_dir = ctx.data_dir / "html" / ctx.format_date()
         output_dir.mkdir(parents=True, exist_ok=True)
         html_path = output_dir / f"notification_test_{ctx.format_time()}.html"
         html_content = f"""<!DOCTYPE html>

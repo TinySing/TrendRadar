@@ -7,7 +7,7 @@
 
 import os
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
 
 import yaml
 
@@ -48,6 +48,39 @@ def _get_env_int_or_none(key: str) -> Optional[int]:
 def _get_env_str(key: str, default: str = "") -> str:
     """从环境变量获取字符串值"""
     return os.environ.get(key, "").strip() or default
+
+
+def get_local_data_dir(
+    config: Optional[Dict[str, Any]] = None,
+    config_path: Optional[Union[str, Path]] = None,
+    base_dir: Optional[Union[str, Path]] = None,
+) -> Path:
+    """获取本地数据目录，优先级：环境变量 > 已加载配置 > 配置文件 > 默认值。"""
+    env_data_dir = _get_env_str("LOCAL_DATA_DIR")
+    if env_data_dir:
+        data_dir = Path(env_data_dir)
+    elif config is not None:
+        data_dir = Path(
+            config.get("STORAGE", {}).get("LOCAL", {}).get("DATA_DIR", "output")
+        )
+    else:
+        raw_data_dir = "output"
+        if config_path and Path(config_path).exists():
+            try:
+                with open(config_path, "r", encoding="utf-8") as f:
+                    config_data = yaml.safe_load(f) or {}
+                raw_data_dir = (
+                    config_data.get("storage", {})
+                    .get("local", {})
+                    .get("data_dir", "output")
+                )
+            except Exception:
+                raw_data_dir = "output"
+        data_dir = Path(raw_data_dir)
+
+    if data_dir.is_absolute() or base_dir is None:
+        return data_dir
+    return Path(base_dir) / data_dir
 
 
 def _load_app_config(config_data: Dict) -> Dict:
@@ -381,7 +414,7 @@ def _load_storage_config(config_data: Dict) -> Dict:
             "HTML": html_enabled_env if html_enabled_env is not None else formats.get("html", True),
         },
         "LOCAL": {
-            "DATA_DIR": local.get("data_dir", "output"),
+            "DATA_DIR": _get_env_str("LOCAL_DATA_DIR") or local.get("data_dir", "output"),
             "RETENTION_DAYS": _get_env_int("LOCAL_RETENTION_DAYS") or local.get("retention_days", 0),
         },
         "REMOTE": {
