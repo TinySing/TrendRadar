@@ -60,6 +60,8 @@ platforms:
   # 1. 做“全网热点 + 新闻线索”的综合监控/日报
   # 2. 优先覆盖大众真实接触的平台，而不是只保留低噪音新闻源
   # 3. 冷启动先广撒网，后续再按阅读数据和实际效果收缩
+  
+  # 数据源：https://newsnow.busiyi.world/
 
   # 主流新闻面
   - id: "thepaper"
@@ -86,10 +88,10 @@ platforms:
   # 讨论面 / 年轻用户补充
   - id: "zhihu"
     name: "知乎"
-  - id: "bilibili-hot-search"
-    name: "bilibili 热搜"
-  - id: "tieba"
-    name: "贴吧"
+  # - id: "bilibili-hot-search"
+  #   name: "bilibili 热搜"
+  # - id: "tieba"
+  #   name: "贴吧"
 
   # 财经 / 科技产业补充
   - id: "wallstreetcn-hot"
@@ -219,6 +221,10 @@ platforms:
 # enabled: 可选，默认 true
 # max_age_days: 可选，覆盖全局 freshness_filter.max_age_days
 # ===============================================================
+
+# 数据源可以从下面这个仓库中选择：
+# https://github.com/tuan3w/awesome-tech-rss
+# https://github.com/plenaryapp/awesome-rss-feeds
 rss:
   enabled: true                       # 是否启用 RSS 抓取
 
