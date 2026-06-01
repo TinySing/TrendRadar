@@ -6,6 +6,9 @@ __pycache__/
 
 # Local env
 .venv/
+.env
+docker/.env
+docker/docker-compose.override.yml
 
 # Runtime outputs (local/server run artifacts)
 index.html
